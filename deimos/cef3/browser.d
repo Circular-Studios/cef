@@ -38,6 +38,9 @@ module deimos.cef3.browser;
 
 extern(C) {
     import deimos.cef3.base;
+    import deimos.cef3.frame;
+    import deimos.cef3.process_message;
+    import deimos.cef3.request_context;
 
     ///
     // Structure used to represent a browser window. When used in the browser
@@ -101,6 +104,12 @@ extern(C) {
         // Returns the globally unique identifier for this browser.
         ///
         extern(System) int function(cef_browser_t* self) get_identifier;
+
+        ///
+        // Returns true (1) if this object is pointing to the same handle as |that|
+        // object.
+        ///
+        extern(System) int function(cef_browser_t *self, cef_browser_t *that) is_same;
 
         ///
         // Returns true (1) if the window is a popup window.
@@ -174,16 +183,16 @@ extern(C) {
         ///
         extern(System) void function(cef_run_file_dialog_callback_t* self, cef_browser_host_t* browser_host,
                                     cef_string_list_t file_paths) cont;
-        }
+    }
 
 
-        ///
-        // Structure used to represent the browser process aspects of a browser window.
-        // The functions of this structure can only be called in the browser process.
-        // They may be called on any thread in that process unless otherwise indicated
-        // in the comments.
-        ///
-        typedef struct cef_browser_host_t {
+    ///
+    // Structure used to represent the browser process aspects of a browser window.
+    // The functions of this structure can only be called in the browser process.
+    // They may be called on any thread in that process unless otherwise indicated
+    // in the comments.
+    ///
+    struct cef_browser_host_t {
         ///
         // Base structure.
         ///
@@ -195,16 +204,16 @@ extern(C) {
         extern(System) cef_browser_t* function(cef_browser_host_t* self) get_browser;
 
         ///
-        // Call this function before destroying a contained browser window. This
-        // function performs any internal cleanup that may be needed before the
-        // browser window is destroyed.
+        // Request that the browser close. The JavaScript 'onbeforeunload' event will
+        // be fired. If |force_close| is false (0) the event handler, if any, will be
+        // allowed to prompt the user and the user can optionally cancel the close. If
+        // |force_close| is true (1) the prompt will not be displayed and the close
+        // will proceed. Results in a call to cef_life_span_handler_t::do_close() if
+        // the event handler allows the close or if |force_close| is true (1). See
+        // cef_life_span_handler_t::do_close() documentation for additional usage
+        // information.
         ///
-        extern(System) void function(cef_browser_host_t* self) parent_window_will_close;
-
-        ///
-        // Closes this browser window.
-        ///
-        extern(System) void function(close_browser)(cef_browser_host_t* self);
+        extern(System) void  function(cef_browser_host_t* self, int force_close) close_browser;
 
         ///
         // Set focus for the browser window. If |enable| is true (1) focus will be set
@@ -230,15 +239,9 @@ extern(C) {
         extern(System) cef_client_t* function(cef_browser_host_t* self) get_client;
 
         ///
-        // Returns the DevTools URL for this browser. If |http_scheme| is true (1) the
-        // returned URL will use the http scheme instead of the chrome-devtools
-        // scheme. Remote debugging can be enabled by specifying the "remote-
-        // debugging-port" command-line flag or by setting the
-        // CefSettings.remote_debugging_port value. If remote debugging is not enabled
-        // this function will return an NULL string.
+        // Returns the request context for this browser.
         ///
-        // The resulting string must be freed by calling cef_string_userfree_free().
-        extern(System) cef_string_userfree_t function(cef_browser_host_t* self, int http_scheme) get_dev_tools_url;
+        extern(System) cef_request_context_t* function(cef_browser_host_t* self) get_request_context;
 
         ///
         // Get the current zoom level. The default zoom level is 0.0. This function
@@ -265,28 +268,171 @@ extern(C) {
         // dialog is already pending. The dialog will be initiated asynchronously on
         // the UI thread.
         ///
-        extern(System) void function(cef_browser_host_t* self, enum cef_file_dialog_mode_t mode,
+        extern(System) void function(cef_browser_host_t* self, cef_file_dialog_mode_t mode,
                                     const(cef_string_t)* title, const(cef_string_t)* default_file_name,
-                                    cef_string_list_t accept_types, cef_run_file_dialog_callback_t* callback) run_file_dialog;
+                                    cef_string_list_t accept_types, cef_run_file_dialog_callback_t* callback)
+                                        run_file_dialog;
+
+        ///
+        // Download the file at |url| using cef_download_handler_t.
+        ///
+        extern(System) void function(cef_browser_host_t* self, cef_string_t* url) start_download;
+
+        ///
+        // Print the current browser contents.
+        ///
+        extern(System) void function(cef_browser_host_t* self) print;
+
+        ///
+        // Search for |searchText|. |identifier| can be used to have multiple searches
+        // running simultaniously. |forward| indicates whether to search forward or
+        // backward within the page. |matchCase| indicates whether the search should
+        // be case-sensitive. |findNext| indicates whether this is the first request
+        // or a follow-up.
+        ///
+        extern(System) void function(cef_browser_host_t* self, int identifier, const(cef_string_t)* searchText,
+                                    int forward, int matchCase, int findNext) find;
+
+        ///
+        // Cancel all searches that are currently going on.
+        ///        
+        extern(System) void function(cef_browser_host_t* self, int clearSelection) stop_finding;
+
+        ///
+        // Open developer tools in its own window.
+        ///
+        extern(System) void function(cef_browser_host_t* self, const(cef_window_info_t)* windowInfo,
+                                    cef_client_t* client, const(cef_browser_settings_t)* settings) show_dev_tools;
+
+        ///
+        // Explicitly close the developer tools window if one exists for this browser
+        // instance.
+        ///
+        extern(System) void function(cef_browser_host_t* self) close_dev_tools;
+
+        ///
+        // Set whether mouse cursor change is disabled.
+        ///
+        extern(System) void function(cef_browser_host_t* self, int disabled) set_mouse_cursor_change_disabled;
+
+        ///
+        // Returns true (1) if mouse cursor change is disabled.
+        ///
+        extern(System) int function(cef_browser_host_t* self) is_mouse_cursor_change_disabled;
+
+        ///
+        // Returns true (1) if window rendering is disabled.
+        ///
+        extern(System) int function(cef_browser_host_t* self) is_window_rendering_disabled;
+
+        ///
+        // Notify the browser that the widget has been resized. The browser will first
+        // call cef_render_handler_t::GetViewRect to get the new size and then call
+        // cef_render_handler_t::OnPaint asynchronously with the updated regions. This
+        // function is only used when window rendering is disabled.
+        ///
+        extern(System) void function(cef_browser_host_t* self) was_resized;
+
+        ///
+        // Notify the browser that it has been hidden or shown. Layouting and
+        // cef_render_handler_t::OnPaint notification will stop when the browser is
+        // hidden. This function is only used when window rendering is disabled.
+        ///
+        extern(System) void function(cef_browser_host_t* self, int hidden) was_hidden;
+
+        ///
+        // Send a notification to the browser that the screen info has changed. The
+        // browser will then call cef_render_handler_t::GetScreenInfo to update the
+        // screen information with the new values. This simulates moving the webview
+        // window from one display to another, or changing the properties of the
+        // current display. This function is only used when window rendering is
+        // disabled.
+        ///
+        extern(System) void function(cef_browser_host_t* self) notify_screen_info_changed;
+
+        ///
+        // Invalidate the |dirtyRect| region of the view. The browser will call
+        // cef_render_handler_t::OnPaint asynchronously with the updated regions. This
+        // function is only used when window rendering is disabled.
+        ///
+        extern(System) void function(cef_browser_host_t* self, const(cef_rect_t)* dirtyRect, cef_paint_element_type_t type) invalidate;
+
+        ///
+        // Send a key event to the browser.
+        ///
+        extern(System) void function(cef_browser_host_t* self, const(cef_key_event_t)* event) send_key_event;
+
+        ///
+        // Send a mouse click event to the browser. The |x| and |y| coordinates are
+        // relative to the upper-left corner of the view.
+        ///
+        extern(System) void function(cef_browser_host_t* self, const(cef_mouse_event_t)* event, 
+                                    cef_mouse_button_type_t type, int mouseUp, int clickCount) send_mouse_click_event;
+
+        ///
+        // Send a mouse move event to the browser. The |x| and |y| coordinates are
+        // relative to the upper-left corner of the view.
+        ///
+        extern(System) void function(cef_browser_host_t* self, const(cef_mouse_event_t)* event, int mouseLeave) send_mouse_move_event;
+
+        ///
+        // Send a mouse wheel event to the browser. The |x| and |y| coordinates are
+        // relative to the upper-left corner of the view. The |deltaX| and |deltaY|
+        // values represent the movement delta in the X and Y directions respectively.
+        // In order to scroll inside select popups with window rendering disabled
+        // cef_render_handler_t::GetScreenPoint should be implemented properly.
+        ///
+        extern(System) void function(cef_browser_host_t* self, const(cef_mouse_event_t)* event, 
+                                    int deltaX, int deltaY) send_mouse_wheel_event;
+
+        ///
+        // Send a focus event to the browser.
+        ///
+        extern(System) void function(cef_browser_host_t* self, int setFocus) send_focus_event;
+
+        ///
+        // Send a capture lost event to the browser.
+        ///
+        extern(System) void function(cef_browser_host_t* self) send_capture_lost_event;
+
+        ///
+        // Get the NSTextInputContext implementation for enabling IME on Mac when
+        // window rendering is disabled.
+        ///
+        extern(System) void * function(cef_browser_host_t* self) get_nstext_input_context;
+
+        ///
+        // Handles a keyDown event prior to passing it through the NSTextInputClient
+        // machinery.
+        ///
+        extern(System) void function(cef_browser_host_t* self, cef_event_handle_t* keyEvent) handle_key_event_before_text_input_client;
+
+        ///
+        // Performs any additional actions after NSTextInputClient handles the event.
+        ///
+        extern(System) void function(cef_browser_host_t* self, cef_event_handle_t* keyEvent) handle_key_event_after_text_input_client;
     }
 
 
     ///
     // Create a new browser window using the window parameters specified by
     // |windowInfo|. All values will be copied internally and the actual window will
-    // be created on the UI thread. This function can be called on any browser
-    // process thread and will not block.
+    // be created on the UI thread. If |request_context| is NULL the global request
+    // context will be used. This function can be called on any browser process
+    // thread and will not block.
     ///
     int cef_browser_host_create_browser(
-        const(cef_window_info_t)* windowInfo, cef_client_t* client,
-        const(cef_string_t)* url, const(cef_browser_settings_t)* settings);
+        const(cef_window_info_t)* windowInfo, cef_client_t *client,
+        const(cef_string_t)* url, const(cef_browser_settings_t)* settings,
+        cef_request_context_t* request_context);
 
     ///
     // Create a new browser window using the window parameters specified by
-    // |windowInfo|. This function can only be called on the browser process UI
-    // thread.
+    // |windowInfo|. If |request_context| is NULL the global request context will be
+    // used. This function can only be called on the browser process UI thread.
     ///
     cef_browser_t* cef_browser_host_create_browser_sync(
         const(cef_window_info_t)* windowInfo, cef_client_t* client,
-        const(cef_string_t)* url, const(cef_browser_settings_t)* settings);
+        const(cef_string_t)* url, const(cef_browser_settings_t)* settings,
+        cef_request_context_t* request_context);
 }

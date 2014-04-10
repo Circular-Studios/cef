@@ -33,6 +33,11 @@ module deimos.cef3.app;
 
 extern(C) {
     import deimos.cef3.base;
+    import deimos.cef3.browser_process_handler;
+    import deimos.cef3.render_process_handler;
+    import deimos.cef3.resource_bundle_handler;
+    import deimos.cef3.scheme;
+
 
     ///
     // This function should be called from the application entry point function to
@@ -44,7 +49,8 @@ extern(C) {
     // secondary process it will block until the process should exit and then return
     // the process exit code. The |application| parameter may be NULL.
     ///
-    int cef_execute_process(const(cef_main_args_t)* args, cef_app_t* application);
+    int cef_execute_process(const(cef_main_args_t)* args, cef_app_t* application,
+                        void* windows_sandbox_info);
 
     ///
     // This function should be called on the main application thread to initialize
@@ -53,7 +59,7 @@ extern(C) {
     // failed.
     ///
     int cef_initialize(const(cef_main_args_t)* args, const(cef_settings_t)* settings,
-                       cef_app_t* application);
+                       cef_app_t* application, void* windows_sandbox_info);
 
     ///
     // This function should be called on the main application thread to shut down
@@ -87,6 +93,12 @@ extern(C) {
     // if cef_run_message_loop() was used.
     ///
     void cef_quit_message_loop();
+
+    ///
+    // Set to true (1) before calling Windows APIs like TrackPopupMenu that enter a
+    // modal message loop. Set to false (0) after exiting the modal message loop.
+    ///
+    void cef_set_osmodal_loop(int osModalLoop);
 
     ///
     // Implement this structure to provide handler implementations. Methods will be
