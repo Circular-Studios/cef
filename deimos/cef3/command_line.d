@@ -52,125 +52,125 @@ import deimos.cef3.base;
 // be used before cef_initialize() is called.
 ///
 struct cef_command_line_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Returns true (1) if this object is valid. Do not call any other functions
-  // if this function returns false (0).
-  ///
-  extern(System) int function(cef_command_line_t* self) is_valid;
+    ///
+    // Returns true (1) if this object is valid. Do not call any other functions
+    // if this function returns false (0).
+    ///
+    extern(System) int function(cef_command_line_t* self) is_valid;
 
-  ///
-  // Returns true (1) if the values of this object are read-only. Some APIs may
-  // expose read-only objects.
-  ///
-  extern(System) int function(cef_command_line_t* self) is_read_only;
+    ///
+    // Returns true (1) if the values of this object are read-only. Some APIs may
+    // expose read-only objects.
+    ///
+    extern(System) int function(cef_command_line_t* self) is_read_only;
 
-  ///
-  // Returns a writable copy of this object.
-  ///
-  extern(System) cef_command_line_t* function(cef_command_line_t* self) copy;
+    ///
+    // Returns a writable copy of this object.
+    ///
+    extern(System) cef_command_line_t* function(cef_command_line_t* self) copy;
 
-  ///
-  // Initialize the command line with the specified |argc| and |argv| values.
-  // The first argument must be the name of the program. This function is only
-  // supported on non-Windows platforms.
-  ///
-  extern(System) void function(cef_command_line_t* self, int argc, const(char)* const* argv) init_from_argv;
+    ///
+    // Initialize the command line with the specified |argc| and |argv| values.
+    // The first argument must be the name of the program. This function is only
+    // supported on non-Windows platforms.
+    ///
+    extern(System) void function(cef_command_line_t* self, int argc, const(char)* const* argv) init_from_argv;
 
-  ///
-  // Initialize the command line with the string returned by calling
-  // GetCommandLineW(). This function is only supported on Windows.
-  ///
-  extern(System) void function(cef_command_line_t* self, const(cef_string_t)* command_line) init_from_string;
+    ///
+    // Initialize the command line with the string returned by calling
+    // GetCommandLineW(). This function is only supported on Windows.
+    ///
+    extern(System) void function(cef_command_line_t* self, const(cef_string_t)* command_line) init_from_string;
 
-  ///
-  // Reset the command-line switches and arguments but leave the program
-  // component unchanged.
-  ///
-  extern(System) void function(cef_command_line_t* self) reset;
+    ///
+    // Reset the command-line switches and arguments but leave the program
+    // component unchanged.
+    ///
+    extern(System) void function(cef_command_line_t* self) reset;
 
-  ///
-  // Retrieve the original command line string as a vector of strings. The argv
-  // array: { program, [(--|-|/)switch[=value]]*, [--], [argument]* }
-  ///
-  extern(System) void function(cef_command_line_t* self, cef_string_list_t argv) get_argv;
+    ///
+    // Retrieve the original command line string as a vector of strings. The argv
+    // array: { program, [(--|-|/)switch[=value]]*, [--], [argument]* }
+    ///
+    extern(System) void function(cef_command_line_t* self, cef_string_list_t argv) get_argv;
 
-  ///
-  // Constructs and returns the represented command line string. Use this
-  // function cautiously because quoting behavior is unclear.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_command_line_t* self) get_command_line_string;
+    ///
+    // Constructs and returns the represented command line string. Use this
+    // function cautiously because quoting behavior is unclear.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_command_line_t* self) get_command_line_string;
 
-  ///
-  // Get the program part of the command line string (the first item).
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_command_line_t* self) get_program;
+    ///
+    // Get the program part of the command line string (the first item).
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_command_line_t* self) get_program;
 
-  ///
-  // Set the program part of the command line string (the first item).
-  ///
-  extern(System) void function(cef_command_line_t* self, const(cef_string_t)* program) set_program;
+    ///
+    // Set the program part of the command line string (the first item).
+    ///
+    extern(System) void function(cef_command_line_t* self, const(cef_string_t)* program) set_program;
 
-  ///
-  // Returns true (1) if the command line has switches.
-  ///
-  extern(System) int function(cef_command_line_t* self) has_switches;
+    ///
+    // Returns true (1) if the command line has switches.
+    ///
+    extern(System) int function(cef_command_line_t* self) has_switches;
 
-  ///
-  // Returns true (1) if the command line contains the given switch.
-  ///
-  extern(System) int function(cef_command_line_t* self, const(cef_string_t)* name) has_switch;
+    ///
+    // Returns true (1) if the command line contains the given switch.
+    ///
+    extern(System) int function(cef_command_line_t* self, const(cef_string_t)* name) has_switch;
 
-  ///
-  // Returns the value associated with the given switch. If the switch has no
-  // value or isn't present this function returns the NULL string.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_command_line_t* self, const(cef_string_t)* name) get_switch_value;
+    ///
+    // Returns the value associated with the given switch. If the switch has no
+    // value or isn't present this function returns the NULL string.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_command_line_t* self, const(cef_string_t)* name) get_switch_value;
 
-  ///
-  // Returns the map of switch names and values. If a switch has no value an
-  // NULL string is returned.
-  ///
-  extern(System) void function(cef_command_line_t* self, cef_string_map_t switches) get_switches;
+    ///
+    // Returns the map of switch names and values. If a switch has no value an
+    // NULL string is returned.
+    ///
+    extern(System) void function(cef_command_line_t* self, cef_string_map_t switches) get_switches;
 
-  ///
-  // Add a switch to the end of the command line. If the switch has no value
-  // pass an NULL value string.
-  ///
-  extern(System) void function(cef_command_line_t* self, const(cef_string_t)* name) append_switch;
+    ///
+    // Add a switch to the end of the command line. If the switch has no value
+    // pass an NULL value string.
+    ///
+    extern(System) void function(cef_command_line_t* self, const(cef_string_t)* name) append_switch;
 
-  ///
-  // Add a switch with the specified value to the end of the command line.
-  ///
-  extern(System) void function(cef_command_line_t* self, const(cef_string_t)* name, const(cef_string_t)* value) append_switch_with_value;
+    ///
+    // Add a switch with the specified value to the end of the command line.
+    ///
+    extern(System) void function(cef_command_line_t* self, const(cef_string_t)* name, const(cef_string_t)* value) append_switch_with_value;
 
-  ///
-  // True if there are remaining command line arguments.
-  ///
-  extern(System) int function(cef_command_line_t* self) has_arguments;
+    ///
+    // True if there are remaining command line arguments.
+    ///
+    extern(System) int function(cef_command_line_t* self) has_arguments;
 
-  ///
-  // Get the remaining command line arguments.
-  ///
-  extern(System) void function(cef_command_line_t* self, cef_string_list_t arguments) get_arguments;
+    ///
+    // Get the remaining command line arguments.
+    ///
+    extern(System) void function(cef_command_line_t* self, cef_string_list_t arguments) get_arguments;
 
-  ///
-  // Add an argument to the end of the command line.
-  ///
-  extern(System) void function(cef_command_line_t* self, const(cef_string_t)* argument) append_argument;
+    ///
+    // Add an argument to the end of the command line.
+    ///
+    extern(System) void function(cef_command_line_t* self, const(cef_string_t)* argument) append_argument;
 
-  ///
-  // Insert a command before the current command. Common for debuggers, like
-  // "valgrind" or "gdb --args".
-  ///
-  extern(System) void function(cef_command_line_t* self, const(cef_string_t)* wrapper) prepend_wrapper;
+    ///
+    // Insert a command before the current command. Common for debuggers, like
+    // "valgrind" or "gdb --args".
+    ///
+    extern(System) void function(cef_command_line_t* self, const(cef_string_t)* wrapper) prepend_wrapper;
 }
 
 

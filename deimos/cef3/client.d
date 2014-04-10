@@ -38,6 +38,19 @@ module deimos.cef3.client;
 
 extern(C) {
     import deimos.cef3.base;
+    import deimos.cef3.context_menu_handler;
+    import deimos.cef3.dialog_handler;
+    import deimos.cef3.display_handler;
+    import deimos.cef3.download_handler;
+    import deimos.cef3.drag_handler;
+    import deimos.cef3.focus_handler;
+    import deimos.cef3.geolocation_handler;
+    import deimos.cef3.jsdialog_handler;
+    import deimos.cef3.keyboard_handler;
+    import deimos.cef3.life_span_handler;
+    import deimos.cef3.load_handler;
+    import deimos.cef3.render_handler;
+    import deimos.cef3.request_handler;
 
 
     ///
@@ -73,6 +86,11 @@ extern(C) {
         extern(System) cef_download_handler_t* function(cef_client_t* self) get_download_handler;
 
         ///
+        // Return the handler for drag events.
+        ///
+        extern(System) cef_drag_handler_t* function( cef_client_t* self) get_drag_handler;
+
+        ///
         // Return the handler for focus events.
         ///
         extern(System) cef_focus_handler_t* function(cef_client_t* self) get_focus_handler;
@@ -103,6 +121,11 @@ extern(C) {
         // Return the handler for browser load status events.
         ///
         extern(System) cef_load_handler_t* function(cef_client_t* self) get_load_handler;
+
+        ///
+        // Return the handler for off-screen rendering events.
+        ///
+        extern(System) cef_render_handler_t* function(_cef_client_t* self) get_render_handler;
 
         ///
         // Return the handler for browser request events.

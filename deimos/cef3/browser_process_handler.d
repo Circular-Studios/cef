@@ -38,6 +38,8 @@ module deimos.cef3.browser_process_handler;
 
 extern(C) {
     import deimos.cef3.base;
+    import deimos.cef3.command_line;
+    import deimos.cef3.values;
 
     ///
     // Structure used to implement browser process callbacks. The functions of this
@@ -51,23 +53,28 @@ extern(C) {
         cef_base_t base;
 
         ///
-        // Return the handler for proxy events. If no handler is returned the default
-        // system handler will be used. This function is called on the browser process
-        // IO thread.
-        ///
-        extern(System) cef_proxy_handler_t* function(cef_browser_process_handler_t* self) get_proxy_handler;
-
-        ///
         // Called on the browser process UI thread immediately after the CEF context
         // has been initialized.
         ///
         extern(System) void function(cef_browser_process_handler_t* self) on_context_initialized;
 
         ///
-        // Called on the browser process IO thread before a child process is launched.
-        // Provides an opportunity to modify the child process command line.
+        // Called before a child process is launched. Will be called on the browser
+        // process UI thread when launching a render process and on the browser
+        // process IO thread when launching a GPU or plugin process. Provides an
+        // opportunity to modify the child process command line. Do not keep a
+        // reference to |command_line| outside of this function.
         ///
         extern(System) void function(cef_browser_process_handler_t* self, cef_command_line_t* command_line) on_before_child_process_launch;
+
+        ///
+        // Called on the browser process IO thread after the main thread has been
+        // created for a new render process. Provides an opportunity to specify extra
+        // information that will be passed to
+        // cef_render_process_handler_t::on_render_thread_created() in the render
+        // process. Do not keep a reference to |extra_info| outside of this function.
+        ///
+        extern(System) void function(cef_browser_process_handler_t* self, cef_list_value_t* extra_info) on_render_process_thread_created;
     }
 
 }

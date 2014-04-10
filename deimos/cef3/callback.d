@@ -58,4 +58,20 @@ extern(C) {
         ///
         extern(System) void function(cef_callback_t* self) cancel;
     }
+
+    ///
+    // Generic callback structure used for asynchronous completion.
+    ///
+    struct cef_completion_callback_t
+    {
+        ///
+        // Base structure.
+        ///
+        cef_base_t base;
+
+        ///
+        // Method that will be called once the task is complete.
+        ///
+        extern(System) void function(cef_completion_callback_t* self) on_complete;
+    }
 }
