@@ -39,54 +39,55 @@ module deimos.cef3.display_handler;
 extern(C) {
 
 import deimos.cef3.base;
-
+import deimos.cef3.browser;
+import deimos.cef3.frame;
 
 ///
 // Implement this structure to handle events related to browser display state.
 // The functions of this structure will be called on the UI thread.
 ///
 struct cef_display_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called when the loading state has changed.
-  ///
-  extern(System) void function(cef_display_handler_t* self, cef_browser_t* browser, int isLoading, int canGoBack, int canGoForward) on_loading_state_change;
+    ///
+    // Called when a frame's address has changed.
+    ///
+    extern(System) void function(cef_display_handler_t* self, cef_browser_t* browser,
+                        cef_frame_t* frame, const(cef_string_t)* url) on_address_change;
 
-  ///
-  // Called when a frame's address has changed.
-  ///
-  extern(System) void function(cef_display_handler_t* self, cef_browser_t* browser, cef_frame_t* frame, const(cef_string_t)* url) on_address_change;
+    ///
+    // Called when the page title changes.
+    ///
+    extern(System) void function(cef_display_handler_t* self, cef_browser_t* browser,
+                        const(cef_string_t)* title) on_title_change;
 
-  ///
-  // Called when the page title changes.
-  ///
-  extern(System) void function(cef_display_handler_t* self, cef_browser_t* browser, const(cef_string_t)* title) on_title_change;
+    ///
+    // Called when the browser is about to display a tooltip. |text| contains the
+    // text that will be displayed in the tooltip. To handle the display of the
+    // tooltip yourself return true (1). Otherwise, you can optionally modify
+    // |text| and then return false (0) to allow the browser to display the
+    // tooltip. When window rendering is disabled the application is responsible
+    // for drawing tooltips and the return value is ignored.
+    ///
+    extern(System) int function(cef_display_handler_t* self, cef_browser_t* browser,
+                        cef_string_t* text) on_tooltip;
 
-  ///
-  // Called when the browser is about to display a tooltip. |text| contains the
-  // text that will be displayed in the tooltip. To handle the display of the
-  // tooltip yourself return true (1). Otherwise, you can optionally modify
-  // |text| and then return false (0) to allow the browser to display the
-  // tooltip.
-  ///
-  extern(System) int function(cef_display_handler_t* self, cef_browser_t* browser, cef_string_t* text) on_tooltip;
+    ///
+    // Called when the browser receives a status message. |value| contains the
+    // text that will be displayed in the status message.
+    ///
+    extern(System) void function(cef_display_handler_t* self, cef_browser_t* browser,
+                        const(cef_string_t)* value) on_status_message;
 
-  ///
-  // Called when the browser receives a status message. |text| contains the text
-  // that will be displayed in the status message and |type| indicates the
-  // status message type.
-  ///
-  extern(System) void function(cef_display_handler_t* self, cef_browser_t* browser, const(cef_string_t)* value) on_status_message;
-
-  ///
-  // Called to display a console message. Return true (1) to stop the message
-  // from being output to the console.
-  ///
-  extern(System) int function(cef_display_handler_t* self, cef_browser_t* browser, const(cef_string_t)* message, const(cef_string_t)* source, int line) on_console_message;
+    ///
+    // Called to display a console message. Return true (1) to stop the message
+    // from being output to the console.
+    ///
+    extern(System) int function(cef_display_handler_t* self, cef_browser_t* browser,
+                        const(cef_string_t)* message, const(cef_string_t)* source, int line) on_console_message;
 }
 
 

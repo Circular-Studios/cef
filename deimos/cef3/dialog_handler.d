@@ -39,28 +39,30 @@ module deimos.cef3.dialog_handler;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.browser;
 
 
 ///
 // Callback structure for asynchronous continuation of file dialog requests.
 ///
 struct cef_file_dialog_callback_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Continue the file selection with the specified |file_paths|. This may be a
-  // single value or a list of values depending on the dialog mode. An NULL
-  // value is treated the same as calling cancel().
-  ///
-  extern(System) void function(cef_file_dialog_callback_t* self, cef_string_list_t file_paths) cont;
+    ///
+    // Continue the file selection with the specified |file_paths|. This may be a
+    // single value or a list of values depending on the dialog mode. An NULL
+    // value is treated the same as calling cancel().
+    ///
+    extern(System) void function(cef_file_dialog_callback_t* self,
+                        cef_string_list_t file_paths) cont;
 
-  ///
-  // Cancel the file selection.
-  ///
-  extern(System) void function(cef_file_dialog_callback_t* self) cancel;
+    ///
+    // Cancel the file selection.
+    ///
+    extern(System) void function(cef_file_dialog_callback_t* self) cancel;
 }
 
 
@@ -69,23 +71,26 @@ struct cef_file_dialog_callback_t {
 // structure will be called on the browser process UI thread.
 ///
 struct cef_dialog_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called to run a file chooser dialog. |mode| represents the type of dialog
-  // to display. |title| to the title to be used for the dialog and may be NULL
-  // to show the default title ("Open" or "Save" depending on the mode).
-  // |default_file_name| is the default file name to select in the dialog.
-  // |accept_types| is a list of valid lower-cased MIME types or file extensions
-  // specified in an input element and is used to restrict selectable files to
-  // such types. To display a custom dialog return true (1) and execute
-  // |callback| either inline or at a later time. To display the default dialog
-  // return false (0).
-  ///
-  extern(System) int function(cef_dialog_handler_t* self, cef_browser_t* browser,  cef_file_dialog_mode_t mode, const(cef_string_t)* title, const(cef_string_t)* default_file_name, cef_string_list_t accept_types, cef_file_dialog_callback_t* callback) on_file_dialog;
+    ///
+    // Called to run a file chooser dialog. |mode| represents the type of dialog
+    // to display. |title| to the title to be used for the dialog and may be NULL
+    // to show the default title ("Open" or "Save" depending on the mode).
+    // |default_file_name| is the default file name to select in the dialog.
+    // |accept_types| is a list of valid lower-cased MIME types or file extensions
+    // specified in an input element and is used to restrict selectable files to
+    // such types. To display a custom dialog return true (1) and execute
+    // |callback| either inline or at a later time. To display the default dialog
+    // return false (0).
+    ///
+    extern(System) int function(cef_dialog_handler_t* self, cef_browser_t* browser,
+                        cef_file_dialog_mode_t mode, const(cef_string_t)* title,
+                        const(cef_string_t)* default_file_name, cef_string_list_t accept_types,
+                        cef_file_dialog_callback_t* callback) on_file_dialog;
 }
 
 }

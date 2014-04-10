@@ -39,6 +39,9 @@ module deimos.cef3.ocus_handler;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.browser;
+import deimos.cef3.dom;
+import deimos.cef3.frame;
 
 
 ///
@@ -46,30 +49,33 @@ import deimos.cef3.base;
 // this structure will be called on the UI thread.
 ///
 struct cef_focus_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called when the browser component is about to loose focus. For instance, if
-  // focus was on the last HTML element and the user pressed the TAB key. |next|
-  // will be true (1) if the browser is giving focus to the next component and
-  // false (0) if the browser is giving focus to the previous component.
-  ///
-  extern(System) void function(cef_focus_handler_t* self, cef_browser_t* browser, int next) on_take_focus;
+    ///
+    // Called when the browser component is about to loose focus. For instance, if
+    // focus was on the last HTML element and the user pressed the TAB key. |next|
+    // will be true (1) if the browser is giving focus to the next component and
+    // false (0) if the browser is giving focus to the previous component.
+    ///
+    extern(System) void function(cef_focus_handler_t* self, cef_browser_t* browser,
+                        int next) on_take_focus;
 
-  ///
-  // Called when the browser component is requesting focus. |source| indicates
-  // where the focus request is originating from. Return false (0) to allow the
-  // focus to be set or true (1) to cancel setting the focus.
-  ///
-  extern(System) int function(cef_focus_handler_t* self, cef_browser_t* browser,  cef_focus_source_t source) on_set_focus;
+    ///
+    // Called when the browser component is requesting focus. |source| indicates
+    // where the focus request is originating from. Return false (0) to allow the
+    // focus to be set or true (1) to cancel setting the focus.
+    ///
+    extern(System) int function(cef_focus_handler_t* self, cef_browser_t* browser,
+                        cef_focus_source_t source) on_set_focus;
 
-  ///
-  // Called when the browser component has received focus.
-  ///
-  extern(System) void function(cef_focus_handler_t* self, cef_browser_t* browser) on_got_focus;
+    ///
+    // Called when the browser component has received focus.
+    ///
+    extern(System) void function(cef_focus_handler_t* self,
+                        cef_browser_t* browser) on_got_focus;
 }
 
 

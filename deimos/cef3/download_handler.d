@@ -39,24 +39,27 @@ module deimos.cef3.download_handler;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.browser;
+import deimos.cef3.download_item;
 
 
 ///
 // Callback structure used to asynchronously continue a download.
 ///
 struct cef_before_download_callback_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Call to continue the download. Set |download_path| to the full file path
-  // for the download including the file name or leave blank to use the
-  // suggested name and the default temp directory. Set |show_dialog| to true
-  // (1) if you do wish to show the default "Save As" dialog.
-  ///
-  extern(System) void function(cef_before_download_callback_t* self, const(cef_string_t)* download_path, int show_dialog) cont;
+    ///
+    // Call to continue the download. Set |download_path| to the full file path
+    // for the download including the file name or leave blank to use the
+    // suggested name and the default temp directory. Set |show_dialog| to true
+    // (1) if you do wish to show the default "Save As" dialog.
+    ///
+    extern(System) void function(cef_before_download_callback_t* self,
+                        const(cef_string_t)* download_path, int show_dialog) cont;
 }
 
 
@@ -64,15 +67,15 @@ struct cef_before_download_callback_t {
 // Callback structure used to asynchronously cancel a download.
 ///
 struct cef_download_item_callback_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Call to cancel the download.
-  ///
-  extern(System) void function(cef_download_item_callback_t* self) cancel;
+    ///
+    // Call to cancel the download.
+    ///
+    extern(System) void function(cef_download_item_callback_t* self) cancel;
 }
 
 
@@ -81,27 +84,31 @@ struct cef_download_item_callback_t {
 // called on the browser process UI thread.
 ///
 struct cef_download_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called before a download begins. |suggested_name| is the suggested name for
-  // the download file. By default the download will be canceled. Execute
-  // |callback| either asynchronously or in this function to continue the
-  // download if desired. Do not keep a reference to |download_item| outside of
-  // this function.
-  ///
-  extern(System) void function(cef_download_handler_t* self, cef_browser_t* browser, cef_download_item_t* download_item, const(cef_string_t)* suggested_name, cef_before_download_callback_t* callback) on_before_download;
+    ///
+    // Called before a download begins. |suggested_name| is the suggested name for
+    // the download file. By default the download will be canceled. Execute
+    // |callback| either asynchronously or in this function to continue the
+    // download if desired. Do not keep a reference to |download_item| outside of
+    // this function.
+    ///
+    extern(System) void function(cef_download_handler_t* self, cef_browser_t* browser,
+                        cef_download_item_t* download_item, const(cef_string_t)* suggested_name,
+                        cef_before_download_callback_t* callback) on_before_download;
 
-  ///
-  // Called when a download's status or progress information has been updated.
-  // Execute |callback| either asynchronously or in this function to cancel the
-  // download if desired. Do not keep a reference to |download_item| outside of
-  // this function.
-  ///
-  extern(System) void function(cef_download_handler_t* self, cef_browser_t* browser, cef_download_item_t* download_item, cef_download_item_callback_t* callback) on_download_updated;
+    ///
+    // Called when a download's status or progress information has been updated.
+    // Execute |callback| either asynchronously or in this function to cancel the
+    // download if desired. Do not keep a reference to |download_item| outside of
+    // this function.
+    ///
+    extern(System) void function(cef_download_handler_t* self, cef_browser_t* browser,
+                        cef_download_item_t* download_item,
+                        cef_download_item_callback_t* callback) on_download_updated;
 }
 
 

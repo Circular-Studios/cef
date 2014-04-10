@@ -45,103 +45,97 @@ import deimos.cef3.base;
 // Structure used to represent a download item.
 ///
 struct cef_download_item_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Returns true (1) if this object is valid. Do not call any other functions
-  // if this function returns false (0).
-  ///
-  extern(System) int function(cef_download_item_t* self) is_valid;
+    ///
+    // Returns true (1) if this object is valid. Do not call any other functions
+    // if this function returns false (0).
+    ///
+    extern(System) int function(cef_download_item_t* self) is_valid;
 
-  ///
-  // Returns true (1) if the download is in progress.
-  ///
-  extern(System) int function(cef_download_item_t* self) is_in_progress;
+    ///
+    // Returns true (1) if the download is in progress.
+    ///
+    extern(System) int function(cef_download_item_t* self) is_in_progress;
 
-  ///
-  // Returns true (1) if the download is complete.
-  ///
-  extern(System) int function(cef_download_item_t* self) is_complete;
+    ///
+    // Returns true (1) if the download is complete.
+    ///
+    extern(System) int function(cef_download_item_t* self) is_complete;
 
-  ///
-  // Returns true (1) if the download has been canceled or interrupted.
-  ///
-  extern(System) int function(cef_download_item_t* self) is_canceled;
+    ///
+    // Returns true (1) if the download has been canceled or interrupted.
+    ///
+    extern(System) int function(cef_download_item_t* self) is_canceled;
 
-  ///
-  // Returns a simple speed estimate in bytes/s.
-  ///
-  extern(System) int64 function(cef_download_item_t* self) get_current_speed;
+    ///
+    // Returns a simple speed estimate in bytes/s.
+    ///
+    extern(System) int64 function(cef_download_item_t* self) get_current_speed;
 
-  ///
-  // Returns the rough percent complete or -1 if the receive total size is
-  // unknown.
-  ///
-  extern(System) int function(cef_download_item_t* self) get_percent_complete;
+    ///
+    // Returns the rough percent complete or -1 if the receive total size is
+    // unknown.
+    ///
+    extern(System) int function(cef_download_item_t* self) get_percent_complete;
 
-  ///
-  // Returns the total number of bytes.
-  ///
-  extern(System) int64 function(cef_download_item_t* self) get_total_bytes;
+    ///
+    // Returns the total number of bytes.
+    ///
+    extern(System) int64 function(cef_download_item_t* self) get_total_bytes;
 
-  ///
-  // Returns the number of received bytes.
-  ///
-  extern(System) int64 function(cef_download_item_t* self) get_received_bytes;
+    ///
+    // Returns the number of received bytes.
+    ///
+    extern(System) int64 function(cef_download_item_t* self) get_received_bytes;
 
-  ///
-  // Returns the time that the download started.
-  ///
-  extern(System) cef_time_t function(cef_download_item_t* self) get_start_time;
+    ///
+    // Returns the time that the download started.
+    ///
+    extern(System) cef_time_t function(cef_download_item_t* self) get_start_time;
 
-  ///
-  // Returns the time that the download ended.
-  ///
-  extern(System) cef_time_t function(cef_download_item_t* self) get_end_time;
+    ///
+    // Returns the time that the download ended.
+    ///
+    extern(System) cef_time_t function(cef_download_item_t* self) get_end_time;
 
-  ///
-  // Returns the full path to the downloaded or downloading file.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_full_path;
+    ///
+    // Returns the full path to the downloaded or downloading file.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_full_path;
 
-  ///
-  // Returns the unique identifier for this download.
-  ///
-  extern(System) int32 function(cef_download_item_t* self) get_id;
+    ///
+    // Returns the unique identifier for this download.
+    ///
+    extern(System) int32 function(cef_download_item_t* self) get_id;
 
-  ///
-  // Returns the URL.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_url;
+    ///
+    // Returns the URL.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_url;
 
-  ///
-  // Returns the suggested file name.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_suggested_file_name;
+    ///
+    // Returns the suggested file name.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_suggested_file_name;
 
-  ///
-  // Returns the content disposition.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_content_disposition;
+    ///
+    // Returns the content disposition.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_content_disposition;
 
-  ///
-  // Returns the mime type.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_mime_type;
-
-  ///
-  // Returns the referrer character set.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_referrer_charset;
+    ///
+    // Returns the mime type.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_download_item_t* self) get_mime_type;
 }
 
 
