@@ -39,6 +39,10 @@ module deimos.cef3.rame;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.dom;
+import deimos.cef3.request;
+import deimos.cef3.stream;
+import deimos.cef3.string_visitor;
 
 
 ///
@@ -48,147 +52,151 @@ import deimos.cef3.base;
 // the functions of this structure may only be called on the main thread.
 ///
 struct cef_frame_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // True if this object is currently attached to a valid frame.
-  ///
-  extern(System) int function(cef_frame_t* self) is_valid;
+    ///
+    // True if this object is currently attached to a valid frame.
+    ///
+    extern(System) int function(cef_frame_t* self) is_valid;
 
-  ///
-  // Execute undo in this frame.
-  ///
-  extern(System) void function(cef_frame_t* self) undo;
+    ///
+    // Execute undo in this frame.
+    ///
+    extern(System) void function(cef_frame_t* self) undo;
 
-  ///
-  // Execute redo in this frame.
-  ///
-  extern(System) void function(cef_frame_t* self) redo;
+    ///
+    // Execute redo in this frame.
+    ///
+    extern(System) void function(cef_frame_t* self) redo;
 
-  ///
-  // Execute cut in this frame.
-  ///
-  extern(System) void function(cef_frame_t* self) cut;
+    ///
+    // Execute cut in this frame.
+    ///
+    extern(System) void function(cef_frame_t* self) cut;
 
-  ///
-  // Execute copy in this frame.
-  ///
-  extern(System) void function(cef_frame_t* self) copy;
+    ///
+    // Execute copy in this frame.
+    ///
+    extern(System) void function(cef_frame_t* self) copy;
 
-  ///
-  // Execute paste in this frame.
-  ///
-  extern(System) void function(cef_frame_t* self) paste;
+    ///
+    // Execute paste in this frame.
+    ///
+    extern(System) void function(cef_frame_t* self) paste;
 
-  ///
-  // Execute delete in this frame.
-  ///
-  extern(System) void function(cef_frame_t* self) del;
+    ///
+    // Execute delete in this frame.
+    ///
+    extern(System) void function(cef_frame_t* self) del;
 
-  ///
-  // Execute select all in this frame.
-  ///
-  extern(System) void function(cef_frame_t* self) select_all;
+    ///
+    // Execute select all in this frame.
+    ///
+    extern(System) void function(cef_frame_t* self) select_all;
 
-  ///
-  // Save this frame's HTML source to a temporary file and open it in the
-  // default text viewing application. This function can only be called from the
-  // browser process.
-  ///
-  extern(System) void function(cef_frame_t* self) view_source;
+    ///
+    // Save this frame's HTML source to a temporary file and open it in the
+    // default text viewing application. This function can only be called from the
+    // browser process.
+    ///
+    extern(System) void function(cef_frame_t* self) view_source;
 
-  ///
-  // Retrieve this frame's HTML source as a string sent to the specified
-  // visitor.
-  ///
-  extern(System) void function(cef_frame_t* self, cef_string_visitor_t* visitor) get_source;
+    ///
+    // Retrieve this frame's HTML source as a string sent to the specified
+    // visitor.
+    ///
+    extern(System) void function(cef_frame_t* self, cef_string_visitor_t* visitor) get_source;
 
-  ///
-  // Retrieve this frame's display text as a string sent to the specified
-  // visitor.
-  ///
-  extern(System) void function(cef_frame_t* self, cef_string_visitor_t* visitor) get_text;
+    ///
+    // Retrieve this frame's display text as a string sent to the specified
+    // visitor.
+    ///
+    extern(System) void function(cef_frame_t* self, cef_string_visitor_t* visitor) get_text;
 
-  ///
-  // Load the request represented by the |request| object.
-  ///
-  extern(System) void function(cef_frame_t* self, cef_request_t* request) load_request;
+    ///
+    // Load the request represented by the |request| object.
+    ///
+    extern(System) void function(cef_frame_t* self, cef_request_t* request) load_request;
 
-  ///
-  // Load the specified |url|.
-  ///
-  extern(System) void function(cef_frame_t* self, const(cef_string_t)* url) load_url;
+    ///
+    // Load the specified |url|.
+    ///
+    extern(System) void function(cef_frame_t* self, const(cef_string_t)* url) load_url;
 
-  ///
-  // Load the contents of |string_val| with the optional dummy target |url|.
-  ///
-  extern(System) void function(cef_frame_t* self, const(cef_string_t)* string_val, const(cef_string_t)* url) load_string;
+    ///
+    // Load the contents of |string_val| with the specified dummy |url|. |url|
+    // should have a standard scheme (for example, http scheme) or behaviors like
+    // link clicks and web security restrictions may not behave as expected.
+    ///
+    extern(System) void function(cef_frame_t* self, const(cef_string_t)* string_val,
+                        const(cef_string_t)* url) load_string;
 
-  ///
-  // Execute a string of JavaScript code in this frame. The |script_url|
-  // parameter is the URL where the script in question can be found, if any. The
-  // renderer may request this URL to show the developer the source of the
-  // error.  The |start_line| parameter is the base line number to use for error
-  // reporting.
-  ///
-  extern(System) void function(cef_frame_t* self, const(cef_string_t)* code, const(cef_string_t)* script_url, int start_line) execute_java_script;
+    ///
+    // Execute a string of JavaScript code in this frame. The |script_url|
+    // parameter is the URL where the script in question can be found, if any. The
+    // renderer may request this URL to show the developer the source of the
+    // error.  The |start_line| parameter is the base line number to use for error
+    // reporting.
+    ///
+    extern(System) void function(cef_frame_t* self, const(cef_string_t)* code,
+                        const(cef_string_t)* script_url, int start_line) execute_java_script;
 
-  ///
-  // Returns true (1) if this is the main (top-level) frame.
-  ///
-  extern(System) int function(cef_frame_t* self) is_main;
+    ///
+    // Returns true (1) if this is the main (top-level) frame.
+    ///
+    extern(System) int function(cef_frame_t* self) is_main;
 
-  ///
-  // Returns true (1) if this is the focused frame.
-  ///
-  extern(System) int function(cef_frame_t* self) is_focused;
+    ///
+    // Returns true (1) if this is the focused frame.
+    ///
+    extern(System) int function(cef_frame_t* self) is_focused;
 
-  ///
-  // Returns the name for this frame. If the frame has an assigned name (for
-  // example, set via the iframe "name" attribute) then that value will be
-  // returned. Otherwise a unique name will be constructed based on the frame
-  // parent hierarchy. The main (top-level) frame will always have an NULL name
-  // value.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_frame_t* self) get_name;
+    ///
+    // Returns the name for this frame. If the frame has an assigned name (for
+    // example, set via the iframe "name" attribute) then that value will be
+    // returned. Otherwise a unique name will be constructed based on the frame
+    // parent hierarchy. The main (top-level) frame will always have an NULL name
+    // value.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_frame_t* self) get_name;
 
-  ///
-  // Returns the globally unique identifier for this frame.
-  ///
-  extern(System) int64 function(cef_frame_t* self) get_identifier;
+    ///
+    // Returns the globally unique identifier for this frame.
+    ///
+    extern(System) int64 function(cef_frame_t* self) get_identifier;
 
-  ///
-  // Returns the parent of this frame or NULL if this is the main (top-level)
-  // frame.
-  ///
-  extern(System) cef_frame_t* function(cef_frame_t* self) get_parent;
+    ///
+    // Returns the parent of this frame or NULL if this is the main (top-level)
+    // frame.
+    ///
+    extern(System) cef_frame_t* function(cef_frame_t* self) get_parent;
 
-  ///
-  // Returns the URL currently loaded in this frame.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_frame_t* self) get_url;
+    ///
+    // Returns the URL currently loaded in this frame.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_frame_t* self) get_url;
 
-  ///
-  // Returns the browser that this frame belongs to.
-  ///
-  extern(System) cef_browser_t* function(cef_frame_t* self) get_browser;
+    ///
+    // Returns the browser that this frame belongs to.
+    ///
+    extern(System) cef_browser_t* function(cef_frame_t* self) get_browser;
 
-  ///
-  // Get the V8 context associated with the frame. This function can only be
-  // called from the render process.
-  ///
-  extern(System) cef_v8context_t* function(cef_frame_t* self) get_v8context;
+    ///
+    // Get the V8 context associated with the frame. This function can only be
+    // called from the render process.
+    ///
+    extern(System) cef_v8context_t* function(cef_frame_t* self) get_v8context;
 
-  ///
-  // Visit the DOM document. This function can only be called from the render
-  // process.
-  ///
-  extern(System) void function(cef_frame_t* self, cef_domvisitor_t* visitor) visit_dom;
+    ///
+    // Visit the DOM document. This function can only be called from the render
+    // process.
+    ///
+    extern(System) void function(cef_frame_t* self, cef_domvisitor_t* visitor) visit_dom;
 }
 
 

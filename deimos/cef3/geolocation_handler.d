@@ -39,6 +39,7 @@ module deimos.cef3.geolocation_handler;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.browser;
 
 
 ///
@@ -46,15 +47,15 @@ import deimos.cef3.base;
 // permission requests.
 ///
 struct cef_geolocation_callback_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Call to allow or deny geolocation access.
-  ///
-  extern(System) void function(cef_geolocation_callback_t* self, int allow) cont;
+    ///
+    // Call to allow or deny geolocation access.
+    ///
+    extern(System) void function(cef_geolocation_callback_t* self, int allow) cont;
 }
 
 
@@ -64,26 +65,29 @@ struct cef_geolocation_callback_t {
 // process IO thread.
 ///
 struct cef_geolocation_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called when a page requests permission to access geolocation information.
-  // |requesting_url| is the URL requesting permission and |request_id| is the
-  // unique ID for the permission request. Call
-  // cef_geolocation_callback_t::Continue to allow or deny the permission
-  // request.
-  ///
-  extern(System) void function(cef_geolocation_handler_t* self, cef_browser_t* browser, const(cef_string_t)* requesting_url, int request_id, cef_geolocation_callback_t* callback) on_request_geolocation_permission;
+    ///
+    // Called when a page requests permission to access geolocation information.
+    // |requesting_url| is the URL requesting permission and |request_id| is the
+    // unique ID for the permission request. Call
+    // cef_geolocation_callback_t::Continue to allow or deny the permission
+    // request.
+    ///
+    extern(System) void function(cef_geolocation_handler_t* self, cef_browser_t* browser,
+                        const(cef_string_t)* requesting_url, int request_id,
+                        cef_geolocation_callback_t* callback) on_request_geolocation_permission;
 
-  ///
-  // Called when a geolocation access request is canceled. |requesting_url| is
-  // the URL that originally requested permission and |request_id| is the unique
-  // ID for the permission request.
-  ///
-  extern(System) void function(cef_geolocation_handler_t* self, cef_browser_t* browser, const(cef_string_t)* requesting_url, int request_id) on_cancel_geolocation_permission;
+    ///
+    // Called when a geolocation access request is canceled. |requesting_url| is
+    // the URL that originally requested permission and |request_id| is the unique
+    // ID for the permission request.
+    ///
+    extern(System) void function(cef_geolocation_handler_t* self, cef_browser_t* browser,
+                        const(cef_string_t)* requesting_url, int request_id) on_cancel_geolocation_permission;
 }
 
 

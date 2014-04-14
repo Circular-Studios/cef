@@ -39,6 +39,7 @@ module deimos.cef3.jsdialog_handler;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.browser;
 
 
 ///
@@ -46,16 +47,18 @@ import deimos.cef3.base;
 // requests.
 ///
 struct cef_jsdialog_callback_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Continue the JS dialog request. Set |success| to true (1) if the OK button
-  // was pressed. The |user_input| value should be specified for prompt dialogs.
-  ///
-  extern(System) void function(cef_jsdialog_callback_t* self, int success, const(cef_string_t)* user_input) cont;
+    ///
+    // Continue the JS dialog request. Set |success| to true (1) if the OK button
+    // was pressed. The |user_input| value should be specified for prompt dialogs.
+    ///
+    extern(System) void function(   cef_jsdialog_callback_t* self,
+                                    int success,
+                                    const(cef_string_t)* user_input) cont;
 }
 
 
@@ -64,44 +67,63 @@ struct cef_jsdialog_callback_t {
 // functions of this structure will be called on the UI thread.
 ///
 struct cef_jsdialog_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called to run a JavaScript dialog. The |default_prompt_text| value will be
-  // specified for prompt dialogs only. Set |suppress_message| to true (1) and
-  // return false (0) to suppress the message (suppressing messages is
-  // preferable to immediately executing the callback as this is used to detect
-  // presumably malicious behavior like spamming alert messages in
-  // onbeforeunload). Set |suppress_message| to false (0) and return false (0)
-  // to use the default implementation (the default implementation will show one
-  // modal dialog at a time and suppress any additional dialog requests until
-  // the displayed dialog is dismissed). Return true (1) if the application will
-  // use a custom dialog or if the callback has been executed immediately.
-  // Custom dialogs may be either modal or modeless. If a custom dialog is used
-  // the application must execute |callback| once the custom dialog is
-  // dismissed.
-  ///
-  extern(System) int function(cef_jsdialog_handler_t* self, cef_browser_t* browser, const(cef_string_t)* origin_url, const(cef_string_t)* accept_lang,  cef_jsdialog_type_t dialog_type, const(cef_string_t)* message_text, const(cef_string_t)* default_prompt_text, cef_jsdialog_callback_t* callback, int* suppress_message) on_jsdialog;
+    ///
+    // Called to run a JavaScript dialog. The |default_prompt_text| value will be
+    // specified for prompt dialogs only. Set |suppress_message| to true (1) and
+    // return false (0) to suppress the message (suppressing messages is
+    // preferable to immediately executing the callback as this is used to detect
+    // presumably malicious behavior like spamming alert messages in
+    // onbeforeunload). Set |suppress_message| to false (0) and return false (0)
+    // to use the default implementation (the default implementation will show one
+    // modal dialog at a time and suppress any additional dialog requests until
+    // the displayed dialog is dismissed). Return true (1) if the application will
+    // use a custom dialog or if the callback has been executed immediately.
+    // Custom dialogs may be either modal or modeless. If a custom dialog is used
+    // the application must execute |callback| once the custom dialog is
+    // dismissed.
+    ///
+    extern(System) int function(cef_jsdialog_handler_t* self,
+                                cef_browser_t* browser,
+                                const(cef_string_t)* origin_url,
+                                const(cef_string_t)* accept_lang, 
+                                cef_jsdialog_type_t dialog_type,
+                                const(cef_string_t)* message_text,
+                                const(cef_string_t)* default_prompt_text,
+                                cef_jsdialog_callback_t* callback,
+                                int* suppress_message) on_jsdialog;
 
-  ///
-  // Called to run a dialog asking the user if they want to leave a page. Return
-  // false (0) to use the default dialog implementation. Return true (1) if the
-  // application will use a custom dialog or if the callback has been executed
-  // immediately. Custom dialogs may be either modal or modeless. If a custom
-  // dialog is used the application must execute |callback| once the custom
-  // dialog is dismissed.
-  ///
-  extern(System) int function(cef_jsdialog_handler_t* self, cef_browser_t* browser, const(cef_string_t)* message_text, int is_reload, cef_jsdialog_callback_t* callback) on_before_unload_dialog;
+    ///
+    // Called to run a dialog asking the user if they want to leave a page. Return
+    // false (0) to use the default dialog implementation. Return true (1) if the
+    // application will use a custom dialog or if the callback has been executed
+    // immediately. Custom dialogs may be either modal or modeless. If a custom
+    // dialog is used the application must execute |callback| once the custom
+    // dialog is dismissed.
+    ///
+    extern(System) int function(cef_jsdialog_handler_t* self,
+                                cef_browser_t* browser,
+                                const(cef_string_t)* message_text,
+                                int is_reload,
+                                cef_jsdialog_callback_t* callback) on_before_unload_dialog;
 
-  ///
-  // Called to cancel any pending dialogs and reset any saved dialog state. Will
-  // be called due to events like page navigation irregardless of whether any
-  // dialogs are currently pending.
-  ///
-  extern(System) void function(cef_jsdialog_handler_t* self, cef_browser_t* browser) on_reset_dialog_state;
+    ///
+    // Called to cancel any pending dialogs and reset any saved dialog state. Will
+    // be called due to events like page navigation irregardless of whether any
+    // dialogs are currently pending.
+    ///
+    extern(System) void function(   cef_jsdialog_handler_t* self,
+                                    cef_browser_t* browser) on_reset_dialog_state;
+
+    ///
+    // Called when the default implementation dialog is closed.
+    ///
+    extern(System) void function(   cef_jsdialog_handler_t *self,
+                                    cef_browser_t *browser) on_dialog_closed;
 }
 
 

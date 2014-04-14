@@ -53,16 +53,17 @@ int cef_get_geolocation(cef_get_geolocation_callback_t* callback);
 // this structure will be called on the browser process UI thread.
 ///
 struct cef_get_geolocation_callback_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called with the 'best available' location information or, if the location
-  // update failed, with error information.
-  ///
-  extern(System) void function(cef_get_geolocation_callback_t* self, const(cef_geoposition_t)* position) on_location_update;
+    ///
+    // Called with the 'best available' location information or, if the location
+    // update failed, with error information.
+    ///
+    extern(System) void function(cef_get_geolocation_callback_t* self,
+                    const(cef_geoposition_t)* position) on_location_update;
 }
 
 

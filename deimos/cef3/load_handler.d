@@ -39,6 +39,8 @@ module deimos.cef3.load_handler;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.browser;
+import deimos.cef3.frame;
 
 
 ///
@@ -46,50 +48,62 @@ import deimos.cef3.base;
 // functions of this structure will be called on the UI thread.
 ///
 struct cef_load_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called when the browser begins loading a frame. The |frame| value will
-  // never be NULL -- call the is_main() function to check if this frame is the
-  // main frame. Multiple frames may be loading at the same time. Sub-frames may
-  // start or continue loading after the main frame load has ended. This
-  // function may not be called for a particular frame if the load request for
-  // that frame fails.
-  ///
-  extern(System) void function(cef_load_handler_t* self, cef_browser_t* browser, cef_frame_t* frame) on_load_start;
+    ///
+    // Called when the loading state has changed. This callback will be executed
+    // twice -- once when loading is initiated either programmatically or by user
+    // action, and once when loading is terminated due to completion, cancellation
+    // of failure.
+    ///
+    extern(System) void function(   cef_load_handler_t *self,
+                                    cef_browser_t *browser,
+                                    int isLoading,
+                                    int canGoBack,
+                                    int canGoForward) on_loading_state_change;
 
-  ///
-  // Called when the browser is done loading a frame. The |frame| value will
-  // never be NULL -- call the is_main() function to check if this frame is the
-  // main frame. Multiple frames may be loading at the same time. Sub-frames may
-  // start or continue loading after the main frame load has ended. This
-  // function will always be called for all frames irrespective of whether the
-  // request completes successfully.
-  ///
-  extern(System) void function(cef_load_handler_t* self, cef_browser_t* browser, cef_frame_t* frame, int httpStatusCode) on_load_end;
+    ///
+    // Called when the browser begins loading a frame. The |frame| value will
+    // never be NULL -- call the is_main() function to check if this frame is the
+    // main frame. Multiple frames may be loading at the same time. Sub-frames may
+    // start or continue loading after the main frame load has ended. This
+    // function may not be called for a particular frame if the load request for
+    // that frame fails. For notification of overall browser load status use
+    // OnLoadingStateChange instead.
+    ///
+    extern(System) void function(   cef_load_handler_t* self,
+                                    cef_browser_t* browser,
+                                    cef_frame_t* frame) on_load_start;
 
-  ///
-  // Called when the browser fails to load a resource. |errorCode| is the error
-  // code number, |errorText| is the error text and and |failedUrl| is the URL
-  // that failed to load. See net\base\net_error_list.h for complete
-  // descriptions of the error codes.
-  ///
-  extern(System) void function(cef_load_handler_t* self, cef_browser_t* browser, cef_frame_t* frame,  cef_errorcode_t errorCode, const(cef_string_t)* errorText, const(cef_string_t)* failedUrl) on_load_error;
+    ///
+    // Called when the browser is done loading a frame. The |frame| value will
+    // never be NULL -- call the is_main() function to check if this frame is the
+    // main frame. Multiple frames may be loading at the same time. Sub-frames may
+    // start or continue loading after the main frame load has ended. This
+    // function will always be called for all frames irrespective of whether the
+    // request completes successfully.
+    ///
+    extern(System) void function(   cef_load_handler_t* self,
+                                    cef_browser_t* browser,
+                                    cef_frame_t* frame,
+                                    int httpStatusCode) on_load_end;
 
-  ///
-  // Called when the render process terminates unexpectedly. |status| indicates
-  // how the process terminated.
-  ///
-  extern(System) void function(cef_load_handler_t* self, cef_browser_t* browser,  cef_termination_status_t status) on_render_process_terminated;
+    ///
+    // Called when the resource load for a navigation fails or is canceled.
+    // |errorCode| is the error code number, |errorText| is the error text and
+    // |failedUrl| is the URL that failed to load. See net\base\net_error_list.h
+    // for complete descriptions of the error codes.
+    ///
+    extern(System) void function(   cef_load_handler_t* self,
+                                    cef_browser_t* browser,
+                                    cef_frame_t* frame,
+                                    cef_errorcode_t errorCode,
+                                    const(cef_string_t)* errorText,
+                                    const(cef_string_t)* failedUrl) on_load_error;
 
-  ///
-  // Called when a plugin has crashed. |plugin_path| is the path of the plugin
-  // that crashed.
-  ///
-  extern(System) void function(cef_load_handler_t* self, cef_browser_t* browser, const(cef_string_t)* plugin_path) on_plugin_crashed;
 }
 
 

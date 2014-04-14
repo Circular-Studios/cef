@@ -64,10 +64,11 @@ import deimos.cef3.base;
 // |source_origin| URL (like http://www.example.com) will be allowed access to
 // all resources hosted on the specified |target_protocol| and |target_domain|.
 // If |target_domain| is non-NULL and |allow_target_subdomains| if false (0)
-// only exact domain matches will be allowed. If |target_domain| is non-NULL and
-// |allow_target_subdomains| is true (1) sub-domain matches will be allowed. If
-// |target_domain| is NULL and |allow_target_subdomains| if true (1) all domains
-// and IP addresses will be allowed.
+// only exact domain matches will be allowed. If |target_domain| contains a top-
+// level domain component (like "example.com") and |allow_target_subdomains| is
+// true (1) sub-domain matches will be allowed. If |target_domain| is NULL and
+// |allow_target_subdomains| if true (1) all domains and IP addresses will be
+// allowed.
 //
 // This function cannot be used to bypass the restrictions on local or display
 // isolated schemes. See the comments on CefRegisterCustomScheme for more
@@ -76,13 +77,19 @@ import deimos.cef3.base;
 // This function may be called on any thread. Returns false (0) if
 // |source_origin| is invalid or the whitelist cannot be accessed.
 ///
-int cef_add_cross_origin_whitelist_entry(const(cef_string_t)* source_origin, const(cef_string_t)* target_protocol, const(cef_string_t)* target_domain, int allow_target_subdomains);
+int cef_add_cross_origin_whitelist_entry(   const(cef_string_t)* source_origin,
+                                            const(cef_string_t)* target_protocol,
+                                            const(cef_string_t)* target_domain, 
+                                            int allow_target_subdomains);
 
 ///
 // Remove an entry from the cross-origin access whitelist. Returns false (0) if
 // |source_origin| is invalid or the whitelist cannot be accessed.
 ///
-int cef_remove_cross_origin_whitelist_entry(const(cef_string_t)* source_origin, const(cef_string_t)* target_protocol, const(cef_string_t)* target_domain, int allow_target_subdomains);
+int cef_remove_cross_origin_whitelist_entry(const(cef_string_t)* source_origin,
+                                            const(cef_string_t)* target_protocol,
+                                            const(cef_string_t)* target_domain,
+                                            int allow_target_subdomains);
 
 ///
 // Remove all entries from the cross-origin access whitelist. Returns false (0)
