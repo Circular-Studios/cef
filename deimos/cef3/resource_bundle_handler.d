@@ -46,28 +46,28 @@ import deimos.cef3.base;
 // of this structure may be called on multiple threads.
 ///
 struct cef_resource_bundle_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Called to retrieve a localized translation for the string specified by
-  // |message_id|. To provide the translation set |string| to the translation
-  // string and return true (1). To use the default translation return false
-  // (0). Supported message IDs are listed in cef_pack_strings.h.
-  ///
-  extern(System) int function(cef_resource_bundle_handler_t* self, int message_id, cef_string_t* string) get_localized_string;
+    ///
+    // Called to retrieve a localized translation for the string specified by
+    // |message_id|. To provide the translation set |string| to the translation
+    // string and return true (1). To use the default translation return false
+    // (0). Supported message IDs are listed in cef_pack_strings.h.
+    ///
+    extern(System) int function(cef_resource_bundle_handler_t* self, int message_id, cef_string_t* string) get_localized_string;
 
-  ///
-  // Called to retrieve data for the resource specified by |resource_id|. To
-  // provide the resource data set |data| and |data_size| to the data pointer
-  // and size respectively and return true (1). To use the default resource data
-  // return false (0). The resource data will not be copied and must remain
-  // resident in memory. Supported resource IDs are listed in
-  // cef_pack_resources.h.
-  ///
-  extern(System) int function(cef_resource_bundle_handler_t* self, int resource_id, void** data, size_t* data_size) get_data_resource;
+    ///
+    // Called to retrieve data for the resource specified by |resource_id|. To
+    // provide the resource data set |data| and |data_size| to the data pointer
+    // and size respectively and return true (1). To use the default resource data
+    // return false (0). The resource data will not be copied and must remain
+    // resident in memory. Supported resource IDs are listed in
+    // cef_pack_resources.h.
+    ///
+    extern(System) int function(cef_resource_bundle_handler_t* self, int resource_id, void** data, size_t* data_size) get_data_resource;
 }
 
 

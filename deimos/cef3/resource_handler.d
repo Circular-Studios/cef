@@ -39,6 +39,11 @@ module deimos.cef3.resource_handler;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.browser;
+import deimos.cef3.callback;
+import deimos.cef3.cookie;
+import deimos.cef3.request;
+import deimos.cef3.response;
 
 
 ///
@@ -46,58 +51,58 @@ import deimos.cef3.base;
 // of this structure will always be called on the IO thread.
 ///
 struct cef_resource_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Begin processing the request. To handle the request return true (1) and
-  // call cef_callback_t::cont() once the response header information is
-  // available (cef_callback_t::cont() can also be called from inside this
-  // function if header information is available immediately). To cancel the
-  // request return false (0).
-  ///
-  extern(System) int function(cef_resource_handler_t* self, cef_request_t* request, cef_callback_t* callback) process_request;
+    ///
+    // Begin processing the request. To handle the request return true (1) and
+    // call cef_callback_t::cont() once the response header information is
+    // available (cef_callback_t::cont() can also be called from inside this
+    // function if header information is available immediately). To cancel the
+    // request return false (0).
+    ///
+    extern(System) int function(cef_resource_handler_t* self, cef_request_t* request, cef_callback_t* callback) process_request;
 
-  ///
-  // Retrieve response header information. If the response length is not known
-  // set |response_length| to -1 and read_response() will be called until it
-  // returns false (0). If the response length is known set |response_length| to
-  // a positive value and read_response() will be called until it returns false
-  // (0) or the specified number of bytes have been read. Use the |response|
-  // object to set the mime type, http status code and other optional header
-  // values. To redirect the request to a new URL set |redirectUrl| to the new
-  // URL.
-  ///
-  extern(System) void function(cef_resource_handler_t* self, cef_response_t* response, int64* response_length, cef_string_t* redirectUrl) get_response_headers;
+    ///
+    // Retrieve response header information. If the response length is not known
+    // set |response_length| to -1 and read_response() will be called until it
+    // returns false (0). If the response length is known set |response_length| to
+    // a positive value and read_response() will be called until it returns false
+    // (0) or the specified number of bytes have been read. Use the |response|
+    // object to set the mime type, http status code and other optional header
+    // values. To redirect the request to a new URL set |redirectUrl| to the new
+    // URL.
+    ///
+    extern(System) void function(cef_resource_handler_t* self, cef_response_t* response, int64* response_length, cef_string_t* redirectUrl) get_response_headers;
 
-  ///
-  // Read response data. If data is available immediately copy up to
-  // |bytes_to_read| bytes into |data_out|, set |bytes_read| to the number of
-  // bytes copied, and return true (1). To read the data at a later time set
-  // |bytes_read| to 0, return true (1) and call cef_callback_t::cont() when the
-  // data is available. To indicate response completion return false (0).
-  ///
-  extern(System) int function(cef_resource_handler_t* self, void* data_out, int bytes_to_read, int* bytes_read, cef_callback_t* callback) read_response;
+    ///
+    // Read response data. If data is available immediately copy up to
+    // |bytes_to_read| bytes into |data_out|, set |bytes_read| to the number of
+    // bytes copied, and return true (1). To read the data at a later time set
+    // |bytes_read| to 0, return true (1) and call cef_callback_t::cont() when the
+    // data is available. To indicate response completion return false (0).
+    ///
+    extern(System) int function(cef_resource_handler_t* self, void* data_out, int bytes_to_read, int* bytes_read, cef_callback_t* callback) read_response;
 
-  ///
-  // Return true (1) if the specified cookie can be sent with the request or
-  // false (0) otherwise. If false (0) is returned for any cookie then no
-  // cookies will be sent with the request.
-  ///
-  extern(System) int function(cef_resource_handler_t* self, const(cef_cookie_t)* cookie) can_get_cookie;
+    ///
+    // Return true (1) if the specified cookie can be sent with the request or
+    // false (0) otherwise. If false (0) is returned for any cookie then no
+    // cookies will be sent with the request.
+    ///
+    extern(System) int function(cef_resource_handler_t* self, const(cef_cookie_t)* cookie) can_get_cookie;
 
-  ///
-  // Return true (1) if the specified cookie returned with the response can be
-  // set or false (0) otherwise.
-  ///
-  extern(System) int function(cef_resource_handler_t* self, const(cef_cookie_t)* cookie) can_set_cookie;
+    ///
+    // Return true (1) if the specified cookie returned with the response can be
+    // set or false (0) otherwise.
+    ///
+    extern(System) int function(cef_resource_handler_t* self, const(cef_cookie_t)* cookie) can_set_cookie;
 
-  ///
-  // Request processing has been canceled.
-  ///
-  extern(System) void function(cef_resource_handler_t* self) cancel;
+    ///
+    // Request processing has been canceled.
+    ///
+    extern(System) void function(cef_resource_handler_t* self) cancel;
 }
 
 

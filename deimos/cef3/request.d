@@ -46,88 +46,101 @@ import deimos.cef3.base;
 // may be called on any thread.
 ///
 struct cef_request_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Returns true (1) if this object is read-only.
-  ///
-  extern(System) int function(cef_request_t* self) is_read_only;
+    ///
+    // Returns true (1) if this object is read-only.
+    ///
+    extern(System) int function(cef_request_t* self) is_read_only;
 
-  ///
-  // Get the fully qualified URL.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_request_t* self) get_url;
+    ///
+    // Get the fully qualified URL.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_request_t* self) get_url;
 
-  ///
-  // Set the fully qualified URL.
-  ///
-  extern(System) void function(cef_request_t* self, const(cef_string_t)* url) set_url;
+    ///
+    // Set the fully qualified URL.
+    ///
+    extern(System) void function(cef_request_t* self, const(cef_string_t)* url) set_url;
 
-  ///
-  // Get the request function type. The value will default to POST if post data
-  // is provided and GET otherwise.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_request_t* self) get_method;
+    ///
+    // Get the request function type. The value will default to POST if post data
+    // is provided and GET otherwise.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_request_t* self) get_method;
 
-  ///
-  // Set the request function type.
-  ///
-  extern(System) void function(cef_request_t* self, const(cef_string_t)* method) set_method;
+    ///
+    // Set the request function type.
+    ///
+    extern(System) void function(cef_request_t* self, const(cef_string_t)* method) set_method;
 
-  ///
-  // Get the post data.
-  ///
-  extern(System) cef_post_data_t* function(cef_request_t* self) get_post_data;
+    ///
+    // Get the post data.
+    ///
+    extern(System) cef_post_data_t* function(cef_request_t* self) get_post_data;
 
-  ///
-  // Set the post data.
-  ///
-  extern(System) void function(cef_request_t* self, cef_post_data_t* postData) set_post_data;
+    ///
+    // Set the post data.
+    ///
+    extern(System) void function(cef_request_t* self, cef_post_data_t* postData) set_post_data;
 
-  ///
-  // Get the header values.
-  ///
-  extern(System) void function(cef_request_t* self, cef_string_multimap_t headerMap) get_header_map;
+    ///
+    // Get the header values.
+    ///
+    extern(System) void function(cef_request_t* self, cef_string_multimap_t headerMap) get_header_map;
 
-  ///
-  // Set the header values.
-  ///
-  extern(System) void function(cef_request_t* self, cef_string_multimap_t headerMap) set_header_map;
+    ///
+    // Set the header values.
+    ///
+    extern(System) void function(cef_request_t* self, cef_string_multimap_t headerMap) set_header_map;
 
-  ///
-  // Set all values at one time.
-  ///
-  extern(System) void function(cef_request_t* self, const(cef_string_t)* url, const(cef_string_t)* method, cef_post_data_t* postData, cef_string_multimap_t headerMap) set;
+    ///
+    // Set all values at one time.
+    ///
+    extern(System) void function(cef_request_t* self, const(cef_string_t)* url, const(cef_string_t)* method, cef_post_data_t* postData, cef_string_multimap_t headerMap) set;
 
-  ///
-  // Get the flags used in combination with cef_urlrequest_t. See
-  // cef_urlrequest_flags_t for supported values.
-  ///
-  extern(System) int function(cef_request_t* self) get_flags;
+    ///
+    // Get the flags used in combination with cef_urlrequest_t. See
+    // cef_urlrequest_flags_t for supported values.
+    ///
+    extern(System) int function(cef_request_t* self) get_flags;
 
-  ///
-  // Set the flags used in combination with cef_urlrequest_t.  See
-  // cef_urlrequest_flags_t for supported values.
-  ///
-  extern(System) void function(cef_request_t* self, int flags) set_flags;
+    ///
+    // Set the flags used in combination with cef_urlrequest_t.  See
+    // cef_urlrequest_flags_t for supported values.
+    ///
+    extern(System) void function(cef_request_t* self, int flags) set_flags;
 
-  ///
-  // Set the URL to the first party for cookies used in combination with
-  // cef_urlrequest_t.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_request_t* self) get_first_party_for_cookies;
+    ///
+    // Set the URL to the first party for cookies used in combination with
+    // cef_urlrequest_t.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_request_t* self) get_first_party_for_cookies;
 
-  ///
-  // Get the URL to the first party for cookies used in combination with
-  // cef_urlrequest_t.
-  ///
-  extern(System) void function(cef_request_t* self, const(cef_string_t)* url) set_first_party_for_cookies;
+    ///
+    // Get the URL to the first party for cookies used in combination with
+    // cef_urlrequest_t.
+    ///
+    extern(System) void function(cef_request_t* self, const(cef_string_t)* url) set_first_party_for_cookies;
+
+    ///
+    // Get the resource type for this request. Accurate resource type information
+    // may only be available in the browser process.
+    ///
+    extern(System) cef_resource_type_t function(cef_request_t *self) get_resource_type;
+
+    ///
+    // Get the transition type for this request. Only available in the browser
+    // process and only applies to requests that represent a main frame or sub-
+    // frame navigation.
+    ///
+    extern(System) cef_transition_type_t function(cef_request_t *self) get_transition_type;
 }
 
 
@@ -142,41 +155,41 @@ cef_request_t* cef_request_create();
 // this structure may be called on any thread.
 ///
 struct cef_post_data_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Returns true (1) if this object is read-only.
-  ///
-  extern(System) int function(cef_post_data_t* self) is_read_only;
+    ///
+    // Returns true (1) if this object is read-only.
+    ///
+    extern(System) int function(cef_post_data_t* self) is_read_only;
 
-  ///
-  // Returns the number of existing post data elements.
-  ///
-  extern(System) size_t function(cef_post_data_t* self) get_element_count;
+    ///
+    // Returns the number of existing post data elements.
+    ///
+    extern(System) size_t function(cef_post_data_t* self) get_element_count;
 
-  ///
-  // Retrieve the post data elements.
-  ///
-  extern(System) void function(cef_post_data_t* self, size_t* elementsCount, cef_post_data_element_t** elements) get_elements;
+    ///
+    // Retrieve the post data elements.
+    ///
+    extern(System) void function(cef_post_data_t* self, size_t* elementsCount, cef_post_data_element_t** elements) get_elements;
 
-  ///
-  // Remove the specified post data element.  Returns true (1) if the removal
-  // succeeds.
-  ///
-  extern(System) int function(cef_post_data_t* self, cef_post_data_element_t* element) remove_element;
+    ///
+    // Remove the specified post data element.  Returns true (1) if the removal
+    // succeeds.
+    ///
+    extern(System) int function(cef_post_data_t* self, cef_post_data_element_t* element) remove_element;
 
-  ///
-  // Add the specified post data element.  Returns true (1) if the add succeeds.
-  ///
-  extern(System) int function(cef_post_data_t* self, cef_post_data_element_t* element) add_element;
+    ///
+    // Add the specified post data element.  Returns true (1) if the add succeeds.
+    ///
+    extern(System) int function(cef_post_data_t* self, cef_post_data_element_t* element) add_element;
 
-  ///
-  // Remove all existing post data elements.
-  ///
-  extern(System) void function(cef_post_data_t* self) remove_elements;
+    ///
+    // Remove all existing post data elements.
+    ///
+    extern(System) void function(cef_post_data_t* self) remove_elements;
 }
 
 
@@ -191,53 +204,53 @@ cef_post_data_t* cef_post_data_create();
 // functions of this structure may be called on any thread.
 ///
 struct cef_post_data_element_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Returns true (1) if this object is read-only.
-  ///
-  extern(System) int function(cef_post_data_element_t* self) is_read_only;
+    ///
+    // Returns true (1) if this object is read-only.
+    ///
+    extern(System) int function(cef_post_data_element_t* self) is_read_only;
 
-  ///
-  // Remove all contents from the post data element.
-  ///
-  extern(System) void function(cef_post_data_element_t* self) set_to_empty;
+    ///
+    // Remove all contents from the post data element.
+    ///
+    extern(System) void function(cef_post_data_element_t* self) set_to_empty;
 
-  ///
-  // The post data element will represent a file.
-  ///
-  extern(System) void function(cef_post_data_element_t* self, const(cef_string_t)* fileName) set_to_file;
+    ///
+    // The post data element will represent a file.
+    ///
+    extern(System) void function(cef_post_data_element_t* self, const(cef_string_t)* fileName) set_to_file;
 
-  ///
-  // The post data element will represent bytes.  The bytes passed in will be
-  // copied.
-  ///
-  extern(System) void function(cef_post_data_element_t* self, size_t size, const(void)* bytes) set_to_bytes;
+    ///
+    // The post data element will represent bytes.  The bytes passed in will be
+    // copied.
+    ///
+    extern(System) void function(cef_post_data_element_t* self, size_t size, const(void)* bytes) set_to_bytes;
 
-  ///
-  // Return the type of this post data element.
-  ///
-  extern(System)  cef_postdataelement_type_t function(cef_post_data_element_t* self) get_type;
+    ///
+    // Return the type of this post data element.
+    ///
+    extern(System)  cef_postdataelement_type_t function(cef_post_data_element_t* self) get_type;
 
-  ///
-  // Return the file name.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_post_data_element_t* self) get_file;
+    ///
+    // Return the file name.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_post_data_element_t* self) get_file;
 
-  ///
-  // Return the number of bytes.
-  ///
-  extern(System) size_t function(cef_post_data_element_t* self) get_bytes_count;
+    ///
+    // Return the number of bytes.
+    ///
+    extern(System) size_t function(cef_post_data_element_t* self) get_bytes_count;
 
-  ///
-  // Read up to |size| bytes into |bytes| and return the number of bytes
-  // actually read.
-  ///
-  extern(System) size_t function(cef_post_data_element_t* self, size_t size, void* bytes) get_bytes;
+    ///
+    // Read up to |size| bytes into |bytes| and return the number of bytes
+    // actually read.
+    ///
+    extern(System) size_t function(cef_post_data_element_t* self, size_t size, void* bytes) get_bytes;
 }
 
 
