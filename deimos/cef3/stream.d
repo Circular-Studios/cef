@@ -46,31 +46,38 @@ import deimos.cef3.base;
 // functions of this structure may be called on any thread.
 ///
 struct cef_read_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Read raw binary data.
-  ///
-  extern(System) size_t function(cef_read_handler_t* self, void* ptr, size_t size, size_t n) read;
+    ///
+    // Read raw binary data.
+    ///
+    extern(System) size_t function(cef_read_handler_t* self, void* ptr, size_t size, size_t n) read;
 
-  ///
-  // Seek to the specified offset position. |whence| may be any one of SEEK_CUR,
-  // SEEK_END or SEEK_SET. Return zero on success and non-zero on failure.
-  ///
-  extern(System) int function(cef_read_handler_t* self, int64 offset, int whence) seek;
+    ///
+    // Seek to the specified offset position. |whence| may be any one of SEEK_CUR,
+    // SEEK_END or SEEK_SET. Return zero on success and non-zero on failure.
+    ///
+    extern(System) int function(cef_read_handler_t* self, int64 offset, int whence) seek;
 
-  ///
-  // Return the current offset position.
-  ///
-  extern(System) int64 function(cef_read_handler_t* self) tell;
+    ///
+    // Return the current offset position.
+    ///
+    extern(System) int64 function(cef_read_handler_t* self) tell;
 
-  ///
-  // Return non-zero if at end of file.
-  ///
-  extern(System) int function(cef_read_handler_t* self) eof;
+    ///
+    // Return non-zero if at end of file.
+    ///
+    extern(System) int function(cef_read_handler_t* self) eof;
+
+    ///
+    // Return true (1) if this handler performs work like accessing the file
+    // system which may block. Used as a hint for determining the thread to access
+    // the handler from.
+    ///
+    extern(System) int function(cef_read_handler_t* self) may_block;
 }
 
 
@@ -79,31 +86,38 @@ struct cef_read_handler_t {
 // may be called on any thread.
 ///
 struct cef_stream_reader_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Read raw binary data.
-  ///
-  extern(System) size_t function(cef_stream_reader_t* self, void* ptr, size_t size, size_t n) read;
+    ///
+    // Read raw binary data.
+    ///
+    extern(System) size_t function(cef_stream_reader_t* self, void* ptr, size_t size, size_t n) read;
 
-  ///
-  // Seek to the specified offset position. |whence| may be any one of SEEK_CUR,
-  // SEEK_END or SEEK_SET. Returns zero on success and non-zero on failure.
-  ///
-  extern(System) int function(cef_stream_reader_t* self, int64 offset, int whence) seek;
+    ///
+    // Seek to the specified offset position. |whence| may be any one of SEEK_CUR,
+    // SEEK_END or SEEK_SET. Returns zero on success and non-zero on failure.
+    ///
+    extern(System) int function(cef_stream_reader_t* self, int64 offset, int whence) seek;
 
-  ///
-  // Return the current offset position.
-  ///
-  extern(System) int64 function(cef_stream_reader_t* self) tell;
+    ///
+    // Return the current offset position.
+    ///
+    extern(System) int64 function(cef_stream_reader_t* self) tell;
 
-  ///
-  // Return non-zero if at end of file.
-  ///
-  extern(System) int function(cef_stream_reader_t* self) eof;
+    ///
+    // Return non-zero if at end of file.
+    ///
+    extern(System) int function(cef_stream_reader_t* self) eof;
+
+    ///
+    // Returns true (1) if this reader performs work like accessing the file
+    // system which may block. Used as a hint for determining the thread to access
+    // the reader from.
+    ///
+    extern(System) int function(cef_stream_reader_t* self) may_block;
 }
 
 
@@ -128,31 +142,38 @@ cef_stream_reader_t* cef_stream_reader_create_for_handler(cef_read_handler_t* ha
 // functions of this structure may be called on any thread.
 ///
 struct cef_write_handler_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Write raw binary data.
-  ///
-  extern(System) size_t function(cef_write_handler_t* self, const(void)* ptr, size_t size, size_t n) write;
+    ///
+    // Write raw binary data.
+    ///
+    extern(System) size_t function(cef_write_handler_t* self, const(void)* ptr, size_t size, size_t n) write;
 
-  ///
-  // Seek to the specified offset position. |whence| may be any one of SEEK_CUR,
-  // SEEK_END or SEEK_SET. Return zero on success and non-zero on failure.
-  ///
-  extern(System) int function(cef_write_handler_t* self, int64 offset, int whence) seek;
+    ///
+    // Seek to the specified offset position. |whence| may be any one of SEEK_CUR,
+    // SEEK_END or SEEK_SET. Return zero on success and non-zero on failure.
+    ///
+    extern(System) int function(cef_write_handler_t* self, int64 offset, int whence) seek;
 
-  ///
-  // Return the current offset position.
-  ///
-  extern(System) int64 function(cef_write_handler_t* self) tell;
+    ///
+    // Return the current offset position.
+    ///
+    extern(System) int64 function(cef_write_handler_t* self) tell;
 
-  ///
-  // Flush the stream.
-  ///
-  extern(System) int function(cef_write_handler_t* self) flush;
+    ///
+    // Flush the stream.
+    ///
+    extern(System) int function(cef_write_handler_t* self) flush;
+
+    ///
+    // Return true (1) if this handler performs work like accessing the file
+    // system which may block. Used as a hint for determining the thread to access
+    // the handler from.
+    ///
+    extern(System) int function(cef_write_handler_t* self) may_block;
 }
 
 
@@ -161,31 +182,38 @@ struct cef_write_handler_t {
 // be called on any thread.
 ///
 struct cef_stream_writer_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Write raw binary data.
-  ///
-  extern(System) size_t function(cef_stream_writer_t* self, const(void)* ptr, size_t size, size_t n) write;
+    ///
+    // Write raw binary data.
+    ///
+    extern(System) size_t function(cef_stream_writer_t* self, const(void)* ptr, size_t size, size_t n) write;
 
-  ///
-  // Seek to the specified offset position. |whence| may be any one of SEEK_CUR,
-  // SEEK_END or SEEK_SET. Returns zero on success and non-zero on failure.
-  ///
-  extern(System) int function(cef_stream_writer_t* self, int64 offset, int whence) seek;
+    ///
+    // Seek to the specified offset position. |whence| may be any one of SEEK_CUR,
+    // SEEK_END or SEEK_SET. Returns zero on success and non-zero on failure.
+    ///
+    extern(System) int function(cef_stream_writer_t* self, int64 offset, int whence) seek;
 
-  ///
-  // Return the current offset position.
-  ///
-  extern(System) int64 function(cef_stream_writer_t* self) tell;
+    ///
+    // Return the current offset position.
+    ///
+    extern(System) int64 function(cef_stream_writer_t* self) tell;
 
-  ///
-  // Flush the stream.
-  ///
-  extern(System) int function(cef_stream_writer_t* self) flush;
+    ///
+    // Flush the stream.
+    ///
+    extern(System) int function(cef_stream_writer_t* self) flush;
+
+    ///
+    // Returns true (1) if this writer performs work like accessing the file
+    // system which may block. Used as a hint for determining the thread to access
+    // the writer from.
+    ///
+    extern(System) int function(cef_stream_writer_t* self) may_block;
 }
 
 

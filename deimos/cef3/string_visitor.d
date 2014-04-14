@@ -45,15 +45,15 @@ import deimos.cef3.base;
 // Implement this structure to receive string values asynchronously.
 ///
 struct cef_string_visitor_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Method that will be executed.
-  ///
-  extern(System) void function(cef_string_visitor_t* self, const(cef_string_t)* string) visit;
+    ///
+    // Method that will be executed.
+    ///
+    extern(System) void function(cef_string_visitor_t* self, const(cef_string_t)* string) visit;
 }
 
 

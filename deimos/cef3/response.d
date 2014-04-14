@@ -46,63 +46,63 @@ import deimos.cef3.base;
 // may be called on any thread.
 ///
 struct cef_response_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Returns true (1) if this object is read-only.
-  ///
-  extern(System) int function(cef_response_t* self) is_read_only;
+    ///
+    // Returns true (1) if this object is read-only.
+    ///
+    extern(System) int function(cef_response_t* self) is_read_only;
 
-  ///
-  // Get the response status code.
-  ///
-  extern(System) int function(cef_response_t* self) get_status;
+    ///
+    // Get the response status code.
+    ///
+    extern(System) int function(cef_response_t* self) get_status;
 
-  ///
-  // Set the response status code.
-  ///
-  extern(System) void function(cef_response_t* self, int status) set_status;
+    ///
+    // Set the response status code.
+    ///
+    extern(System) void function(cef_response_t* self, int status) set_status;
 
-  ///
-  // Get the response status text.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_response_t* self) get_status_text;
+    ///
+    // Get the response status text.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_response_t* self) get_status_text;
 
-  ///
-  // Set the response status text.
-  ///
-  extern(System) void function(cef_response_t* self, const(cef_string_t)* statusText) set_status_text;
+    ///
+    // Set the response status text.
+    ///
+    extern(System) void function(cef_response_t* self, const(cef_string_t)* statusText) set_status_text;
 
-  ///
-  // Get the response mime type.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_response_t* self) get_mime_type;
+    ///
+    // Get the response mime type.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_response_t* self) get_mime_type;
 
-  ///
-  // Set the response mime type.
-  ///
-  extern(System) void function(cef_response_t* self, const(cef_string_t)* mimeType) set_mime_type;
+    ///
+    // Set the response mime type.
+    ///
+    extern(System) void function(cef_response_t* self, const(cef_string_t)* mimeType) set_mime_type;
 
-  ///
-  // Get the value for the specified response header field.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_response_t* self, const(cef_string_t)* name) get_header;
+    ///
+    // Get the value for the specified response header field.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_response_t* self, const(cef_string_t)* name) get_header;
 
-  ///
-  // Get all response header fields.
-  ///
-  extern(System) void function(cef_response_t* self, cef_string_multimap_t headerMap) get_header_map;
+    ///
+    // Get all response header fields.
+    ///
+    extern(System) void function(cef_response_t* self, cef_string_multimap_t headerMap) get_header_map;
 
-  ///
-  // Set all response header fields.
-  ///
-  extern(System) void function(cef_response_t* self, cef_string_multimap_t headerMap) set_header_map;
+    ///
+    // Set all response header fields.
+    ///
+    extern(System) void function(cef_response_t* self, cef_string_multimap_t headerMap) set_header_map;
 }
 
 

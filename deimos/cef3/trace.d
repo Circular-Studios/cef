@@ -39,12 +39,34 @@ module deimos.cef3.trace;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.callback;
 
 
 ///
-// Start tracing events on all processes. Tracing begins immediately locally,
-// and asynchronously on child processes as soon as they receive the
-// BeginTracing request.
+// Implement this structure to receive notification when tracing has completed.
+// The functions of this structure will be called on the browser process UI
+// thread.
+///
+struct _cef_end_tracing_callback_t
+{
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
+
+    ///
+    // Called after all processes have sent their trace data. |tracing_file| is
+    // the path at which tracing data was written. The client is responsible for
+    // deleting |tracing_file|.
+    ///
+    extern(System) void function(   cef_end_tracing_callback_t* self,
+                                    cef_string_t* tracing_file) on_end_tracing_complete;
+}
+
+///
+// Start tracing events on all processes. Tracing is initialized asynchronously
+// and |callback| will be executed on the UI thread after initialization is
+// complete.
 //
 // If CefBeginTracing was called previously, or if a CefEndTracingAsync call is
 // pending, CefBeginTracing will fail and return false (0).
@@ -58,22 +80,7 @@ import deimos.cef3.base;
 //
 // This function must be called on the browser process UI thread.
 ///
-int cef_begin_tracing(cef_trace_client_t* client, const(cef_string_t)* categories);
-
-///
-// Get the maximum trace buffer percent full state across all processes.
-//
-// cef_trace_client_t::OnTraceBufferPercentFullReply will be called
-// asynchronously after the value is determibed. When any child process reaches
-// 100% full tracing will end automatically and
-// cef_trace_client_t::OnEndTracingComplete will be called. This function fails
-// and returns false (0) if trace is ending or disabled, no cef_trace_client_t
-// was passed to CefBeginTracing, or if a previous call to
-// CefGetTraceBufferPercentFullAsync is pending.
-//
-// This function must be called on the browser process UI thread.
-///
-int cef_get_trace_buffer_percent_full_async();
+int cef_begin_tracing(const(cef_string_t)* categories, cef_completion_callback_t* callback);
 
 ///
 // Stop tracing events on all processes.
@@ -81,37 +88,20 @@ int cef_get_trace_buffer_percent_full_async();
 // This function will fail and return false (0) if a previous call to
 // CefEndTracingAsync is already pending or if CefBeginTracing was not called.
 //
+// |tracing_file| is the path at which tracing data will be written and
+// |callback| is the callback that will be executed once all processes have sent
+// their trace data. If |tracing_file| is NULL a new temporary file path will be
+// used. If |callback| is NULL no trace data will be written.
+//
 // This function must be called on the browser process UI thread.
 ///
-int cef_end_tracing_async();
+int cef_end_tracing(const(cef_string_t)* tracing_file, cef_end_tracing_callback_t* callback);
 
 ///
-// Implement this structure to receive trace notifications. The functions of
-// this structure will be called on the browser process UI thread.
+// Returns the current system trace time or, if none is defined, the current
+// high-res time. Can be used by clients to synchronize with the time
+// information in trace events.
 ///
-struct cef_trace_client_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
-
-  ///
-  // Called 0 or more times between CefBeginTracing and OnEndTracingComplete
-  // with a UTF8 JSON |fragment| of the specified |fragment_size|. Do not keep a
-  // reference to |fragment|.
-  ///
-  extern(System) void function(cef_trace_client_t* self, const(char)* fragment, size_t fragment_size) on_trace_data_collected;
-
-  ///
-  // Called in response to CefGetTraceBufferPercentFullAsync.
-  ///
-  extern(System) void function(cef_trace_client_t* self, float percent_full) on_trace_buffer_percent_full_reply;
-
-  ///
-  // Called after all processes have sent their trace data.
-  ///
-  extern(System) void function(cef_trace_client_t* self) on_end_tracing_complete;
-}
-
+int64 cef_now_from_system_trace_time();
 
 }

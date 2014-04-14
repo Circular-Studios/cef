@@ -39,6 +39,7 @@ module deimos.cef3.zip_reader;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.stream;
 
 
 ///
@@ -47,81 +48,81 @@ import deimos.cef3.base;
 // creates the object.
 ///
 struct cef_zip_reader_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Moves the cursor to the first file in the archive. Returns true (1) if the
-  // cursor position was set successfully.
-  ///
-  extern(System) int function(cef_zip_reader_t* self) move_to_first_file;
+    ///
+    // Moves the cursor to the first file in the archive. Returns true (1) if the
+    // cursor position was set successfully.
+    ///
+    extern(System) int function(cef_zip_reader_t* self) move_to_first_file;
 
-  ///
-  // Moves the cursor to the next file in the archive. Returns true (1) if the
-  // cursor position was set successfully.
-  ///
-  extern(System) int function(cef_zip_reader_t* self) move_to_next_file;
+    ///
+    // Moves the cursor to the next file in the archive. Returns true (1) if the
+    // cursor position was set successfully.
+    ///
+    extern(System) int function(cef_zip_reader_t* self) move_to_next_file;
 
-  ///
-  // Moves the cursor to the specified file in the archive. If |caseSensitive|
-  // is true (1) then the search will be case sensitive. Returns true (1) if the
-  // cursor position was set successfully.
-  ///
-  extern(System) int function(cef_zip_reader_t* self, const(cef_string_t)* fileName, int caseSensitive) move_to_file;
+    ///
+    // Moves the cursor to the specified file in the archive. If |caseSensitive|
+    // is true (1) then the search will be case sensitive. Returns true (1) if the
+    // cursor position was set successfully.
+    ///
+    extern(System) int function(cef_zip_reader_t* self, const(cef_string_t)* fileName, int caseSensitive) move_to_file;
 
-  ///
-  // Closes the archive. This should be called directly to ensure that cleanup
-  // occurs on the correct thread.
-  ///
-  extern(System) int function(cef_zip_reader_t* self) close;
+    ///
+    // Closes the archive. This should be called directly to ensure that cleanup
+    // occurs on the correct thread.
+    ///
+    extern(System) int function(cef_zip_reader_t* self) close;
 
 
-  // The below functions act on the file at the current cursor position.
+    // The below functions act on the file at the current cursor position.
 
-  ///
-  // Returns the name of the file.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_zip_reader_t* self) get_file_name;
+    ///
+    // Returns the name of the file.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_zip_reader_t* self) get_file_name;
 
-  ///
-  // Returns the uncompressed size of the file.
-  ///
-  extern(System) int64 function(cef_zip_reader_t* self) get_file_size;
+    ///
+    // Returns the uncompressed size of the file.
+    ///
+    extern(System) int64 function(cef_zip_reader_t* self) get_file_size;
 
-  ///
-  // Returns the last modified timestamp for the file.
-  ///
-  extern(System) time_t function(cef_zip_reader_t* self) get_file_last_modified;
+    ///
+    // Returns the last modified timestamp for the file.
+    ///
+    extern(System) time_t function(cef_zip_reader_t* self) get_file_last_modified;
 
-  ///
-  // Opens the file for reading of uncompressed data. A read password may
-  // optionally be specified.
-  ///
-  extern(System) int function(cef_zip_reader_t* self, const(cef_string_t)* password) open_file;
+    ///
+    // Opens the file for reading of uncompressed data. A read password may
+    // optionally be specified.
+    ///
+    extern(System) int function(cef_zip_reader_t* self, const(cef_string_t)* password) open_file;
 
-  ///
-  // Closes the file.
-  ///
-  extern(System) int function(cef_zip_reader_t* self) close_file;
+    ///
+    // Closes the file.
+    ///
+    extern(System) int function(cef_zip_reader_t* self) close_file;
 
-  ///
-  // Read uncompressed file contents into the specified buffer. Returns < 0 if
-  // an error occurred, 0 if at the end of file, or the number of bytes read.
-  ///
-  extern(System) int function(cef_zip_reader_t* self, void* buffer, size_t bufferSize) read_file;
+    ///
+    // Read uncompressed file contents into the specified buffer. Returns < 0 if
+    // an error occurred, 0 if at the end of file, or the number of bytes read.
+    ///
+    extern(System) int function(cef_zip_reader_t* self, void* buffer, size_t bufferSize) read_file;
 
-  ///
-  // Returns the current offset in the uncompressed file contents.
-  ///
-  extern(System) int64 function(cef_zip_reader_t* self) tell;
+    ///
+    // Returns the current offset in the uncompressed file contents.
+    ///
+    extern(System) int64 function(cef_zip_reader_t* self) tell;
 
-  ///
-  // Returns true (1) if at end of the file contents.
-  ///
-  extern(System) int function(cef_zip_reader_t* self) eof;
+    ///
+    // Returns true (1) if at end of the file contents.
+    ///
+    extern(System) int function(cef_zip_reader_t* self) eof;
 }
 
 

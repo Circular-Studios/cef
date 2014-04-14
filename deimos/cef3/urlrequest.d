@@ -38,7 +38,10 @@ module deimos.cef3.urlrequest;
 
 extern(C) {
 
+import deimos.cef3.auth_callback;
 import deimos.cef3.base;
+import deimos.cef3.request;
+import deimos.cef3.response;
 
 
 ///
@@ -49,50 +52,57 @@ import deimos.cef3.base;
 // accessed on the same thread that created it.
 ///
 struct cef_urlrequest_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Returns the request object used to create this URL request. The returned
-  // object is read-only and should not be modified.
-  ///
-  extern(System) cef_request_t* function(cef_urlrequest_t* self) get_request;
+    ///
+    // Returns the request object used to create this URL request. The returned
+    // object is read-only and should not be modified.
+    ///
+    extern(System) cef_request_t* function(cef_urlrequest_t* self) get_request;
 
-  ///
-  // Returns the client.
-  ///
-  extern(System) cef_urlrequest_client_t* function(cef_urlrequest_t* self) get_client;
+    ///
+    // Returns the client.
+    ///
+    extern(System) cef_urlrequest_client_t* function(cef_urlrequest_t* self) get_client;
 
-  ///
-  // Returns the request status.
-  ///
-  extern(System)  cef_urlrequest_status_t function(cef_urlrequest_t* self) get_request_status;
+    ///
+    // Returns the request status.
+    ///
+    extern(System)  cef_urlrequest_status_t function(cef_urlrequest_t* self) get_request_status;
 
-  ///
-  // Returns the request error if status is UR_CANCELED or UR_FAILED, or 0
-  // otherwise.
-  ///
-  extern(System)  cef_errorcode_t function(cef_urlrequest_t* self) get_request_error;
+    ///
+    // Returns the request error if status is UR_CANCELED or UR_FAILED, or 0
+    // otherwise.
+    ///
+    extern(System)  cef_errorcode_t function(cef_urlrequest_t* self) get_request_error;
 
-  ///
-  // Returns the response, or NULL if no response information is available.
-  // Response information will only be available after the upload has completed.
-  // The returned object is read-only and should not be modified.
-  ///
-  extern(System) cef_response_t* function(cef_urlrequest_t* self) get_response;
+    ///
+    // Returns the response, or NULL if no response information is available.
+    // Response information will only be available after the upload has completed.
+    // The returned object is read-only and should not be modified.
+    ///
+    extern(System) cef_response_t* function(cef_urlrequest_t* self) get_response;
 
-  ///
-  // Cancel the request.
-  ///
-  extern(System) void function(cef_urlrequest_t* self) cancel;
+    ///
+    // Cancel the request.
+    ///
+    extern(System) void function(cef_urlrequest_t* self) cancel;
 }
 
 
 ///
 // Create a new URL request. Only GET, POST, HEAD, DELETE and PUT request
-// functions are supported. The |request| object will be marked as read-only
+// functions are supported. Multiple post data elements are not supported and
+// elements of type PDE_TYPE_FILE are only supported for requests originating
+// from the browser process. Requests originating from the render process will
+// receive the same handling as requests originating from Web content -- if the
+// response contains Content-Disposition or Mime-Type header values that would
+// not normally be rendered then the response may receive special handling
+// inside the browser (for example, via the file download code path instead of
+// the URL request code path). The |request| object will be marked as read-only
 // after calling this function.
 ///
 cef_urlrequest_t* cef_urlrequest_create(cef_request_t* request, cef_urlrequest_client_t* client);
@@ -101,42 +111,60 @@ cef_urlrequest_t* cef_urlrequest_create(cef_request_t* request, cef_urlrequest_c
 ///
 // Structure that should be implemented by the cef_urlrequest_t client. The
 // functions of this structure will be called on the same thread that created
-// the request.
+// the request unless otherwise documented.
 ///
 struct cef_urlrequest_client_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
 
-  ///
-  // Notifies the client that the request has completed. Use the
-  // cef_urlrequest_t::GetRequestStatus function to determine if the request was
-  // successful or not.
-  ///
-  extern(System) void function(cef_urlrequest_client_t* self, cef_urlrequest_t* request) on_request_complete;
+    ///
+    // Notifies the client that the request has completed. Use the
+    // cef_urlrequest_t::GetRequestStatus function to determine if the request was
+    // successful or not.
+    ///
+    extern(System) void function(cef_urlrequest_client_t* self, cef_urlrequest_t* request) on_request_complete;
 
-  ///
-  // Notifies the client of upload progress. |current| denotes the number of
-  // bytes sent so far and |total| is the total size of uploading data (or -1 if
-  // chunked upload is enabled). This function will only be called if the
-  // UR_FLAG_REPORT_UPLOAD_PROGRESS flag is set on the request.
-  ///
-  extern(System) void function(cef_urlrequest_client_t* self, cef_urlrequest_t* request, uint64 current, uint64 total) on_upload_progress;
+    ///
+    // Notifies the client of upload progress. |current| denotes the number of
+    // bytes sent so far and |total| is the total size of uploading data (or -1 if
+    // chunked upload is enabled). This function will only be called if the
+    // UR_FLAG_REPORT_UPLOAD_PROGRESS flag is set on the request.
+    ///
+    extern(System) void function(cef_urlrequest_client_t* self, cef_urlrequest_t* request, uint64 current, uint64 total) on_upload_progress;
 
-  ///
-  // Notifies the client of download progress. |current| denotes the number of
-  // bytes received up to the call and |total| is the expected total size of the
-  // response (or -1 if not determined).
-  ///
-  extern(System) void function(cef_urlrequest_client_t* self, cef_urlrequest_t* request, uint64 current, uint64 total) on_download_progress;
+    ///
+    // Notifies the client of download progress. |current| denotes the number of
+    // bytes received up to the call and |total| is the expected total size of the
+    // response (or -1 if not determined).
+    ///
+    extern(System) void function(cef_urlrequest_client_t* self, cef_urlrequest_t* request, uint64 current, uint64 total) on_download_progress;
 
-  ///
-  // Called when some part of the response is read. |data| contains the current
-  // bytes received since the last call. This function will not be called if the
-  // UR_FLAG_NO_DOWNLOAD_DATA flag is set on the request.
-  ///
-  extern(System) void function(cef_urlrequest_client_t* self, cef_urlrequest_t* request, const(void)* data, size_t data_length) on_download_data;
+    ///
+    // Called when some part of the response is read. |data| contains the current
+    // bytes received since the last call. This function will not be called if the
+    // UR_FLAG_NO_DOWNLOAD_DATA flag is set on the request.
+    ///
+    extern(System) void function(cef_urlrequest_client_t* self, cef_urlrequest_t* request, const(void)* data, size_t data_length) on_download_data;
+
+    ///
+    // Called on the IO thread when the browser needs credentials from the user.
+    // |isProxy| indicates whether the host is a proxy server. |host| contains the
+    // hostname and |port| contains the port number. Return true (1) to continue
+    // the request and call cef_auth_callback_t::cont() when the authentication
+    // information is available. Return false (0) to cancel the request. This
+    // function will only be called for requests initiated from the browser
+    // process.
+    ///
+    extern(System) int function(cef_urlrequest_client_t *self,
+                                int isProxy,
+                                const(cef_string_t)* host,
+                                int port,
+                                const(cef_string_t)* realm,
+                                const(cef_string_t)* scheme,
+                                cef_auth_callback_t *callback) get_auth_credentials;
+
 }
 
 

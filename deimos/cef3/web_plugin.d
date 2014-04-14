@@ -42,6 +42,80 @@ import deimos.cef3.base;
 
 
 ///
+// Information about a specific web plugin.
+///
+struct cef_web_plugin_info_t {
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
+
+    ///
+    // Returns the plugin name (i.e. Flash).
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_web_plugin_info_t* self) get_name;
+
+    ///
+    // Returns the plugin file path (DLL/bundle/library).
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_web_plugin_info_t* self) get_path;
+
+    ///
+    // Returns the version of the plugin (may be OS-specific).
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_web_plugin_info_t* self) get_version;
+
+    ///
+    // Returns a description of the plugin from the version information.
+    ///
+    // The resulting string must be freed by calling cef_string_userfree_free().
+    extern(System) cef_string_userfree_t function(cef_web_plugin_info_t* self) get_description;
+}
+
+
+///
+// Structure to implement for visiting web plugin information. The functions of
+// this structure will be called on the browser process UI thread.
+///
+struct cef_web_plugin_info_visitor_t {
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
+
+    ///
+    // Method that will be called once for each plugin. |count| is the 0-based
+    // index for the current plugin. |total| is the total number of plugins.
+    // Return false (0) to stop visiting plugins. This function may never be
+    // called if no plugins are found.
+    ///
+    extern(System) int function(cef_web_plugin_info_visitor_t* self, cef_web_plugin_info_t* info, int count, int total) visit;
+}
+
+
+///
+// Structure to implement for receiving unstable plugin information. The
+// functions of this structure will be called on the browser process IO thread.
+///
+struct cef_web_plugin_unstable_callback_t {
+    ///
+    // Base structure.
+    ///
+    cef_base_t base;
+
+    ///
+    // Method that will be called for the requested plugin. |unstable| will be
+    // true (1) if the plugin has reached the crash count threshold of 3 times in
+    // 120 seconds.
+    ///
+    extern(System) void function(cef_web_plugin_unstable_callback_t* self, const(cef_string_t)* path, int unstable) is_unstable;
+}
+
+
+///
 // Visit web plugin information. Can be called on any thread in the browser
 // process.
 ///
@@ -99,79 +173,6 @@ void cef_register_web_plugin_crash(const(cef_string_t)* path);
 // process.
 ///
 void cef_is_web_plugin_unstable(const(cef_string_t)* path, cef_web_plugin_unstable_callback_t* callback);
-
-///
-// Information about a specific web plugin.
-///
-struct cef_web_plugin_info_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
-
-  ///
-  // Returns the plugin name (i.e. Flash).
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_web_plugin_info_t* self) get_name;
-
-  ///
-  // Returns the plugin file path (DLL/bundle/library).
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_web_plugin_info_t* self) get_path;
-
-  ///
-  // Returns the version of the plugin (may be OS-specific).
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_web_plugin_info_t* self) get_version;
-
-  ///
-  // Returns a description of the plugin from the version information.
-  ///
-  // The resulting string must be freed by calling cef_string_userfree_free().
-  extern(System) cef_string_userfree_t function(cef_web_plugin_info_t* self) get_description;
-}
-
-
-///
-// Structure to implement for visiting web plugin information. The functions of
-// this structure will be called on the browser process UI thread.
-///
-struct cef_web_plugin_info_visitor_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
-
-  ///
-  // Method that will be called once for each plugin. |count| is the 0-based
-  // index for the current plugin. |total| is the total number of plugins.
-  // Return false (0) to stop visiting plugins. This function may never be
-  // called if no plugins are found.
-  ///
-  extern(System) int function(cef_web_plugin_info_visitor_t* self, cef_web_plugin_info_t* info, int count, int total) visit;
-}
-
-
-///
-// Structure to implement for receiving unstable plugin information. The
-// functions of this structure will be called on the browser process IO thread.
-///
-struct cef_web_plugin_unstable_callback_t {
-  ///
-  // Base structure.
-  ///
-  cef_base_t base;
-
-  ///
-  // Method that will be called for the requested plugin. |unstable| will be
-  // true (1) if the plugin has reached the crash count threshold of 3 times in
-  // 120 seconds.
-  ///
-  extern(System) void function(cef_web_plugin_unstable_callback_t* self, const(cef_string_t)* path, int unstable) is_unstable;
-}
 
 
 }

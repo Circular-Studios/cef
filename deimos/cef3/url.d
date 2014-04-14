@@ -54,4 +54,11 @@ int cef_parse_url(const(cef_string_t)* url, cef_urlparts_t* parts);
 ///
 int cef_create_url(const(cef_urlparts_t)* parts, cef_string_t* url);
 
+///
+// Returns the mime type for the specified file extension or an NULL string if
+// unknown.
+///
+// The resulting string must be freed by calling cef_string_userfree_free().
+cef_string_userfree_t cef_get_mime_type(const(cef_string_t)* extension);
+
 }
