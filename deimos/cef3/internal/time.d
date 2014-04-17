@@ -63,4 +63,15 @@ extern(C) {
     ///
     int cef_time_to_doublet(const(cef_time_t)* cef_time, double* time);
     int cef_time_from_doublet(double time, cef_time_t* cef_time);
+
+    ///
+    // Retrieve the current system time.
+    //
+    int  cef_time_now(cef_time_t* cef_time);
+
+    ///
+    // Retrieve the delta in milliseconds between two time values.
+    //
+    int  cef_time_delta(const(cef_time_t)* cef_time1, const(cef_time_t)* cef_time2, long* delta);
+
 }
