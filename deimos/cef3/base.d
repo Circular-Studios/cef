@@ -31,12 +31,12 @@ module deimos.cef3.base;
 
 
 extern(C) {
-    import deimos.cef3.internal.export;
-    import deimos.cef3.internal.string;
-    import deimos.cef3.internal.string_list;
-    import deimos.cef3.internal.string_map;
-    import deimos.cef3.internal.string_multimap;
-    import deimos.cef3.internal.types;
+    //import deimos.cef3.internal.export;
+    public import deimos.cef3.internal.string;
+    public import deimos.cef3.internal.string_list;
+    public import deimos.cef3.internal.string_map;
+    public import deimos.cef3.internal.string_multimap;
+    public import deimos.cef3.internal.types;
 
     ///
     // Structure defining the reference count implementation functions. All

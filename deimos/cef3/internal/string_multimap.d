@@ -29,7 +29,7 @@ module deimos.cfe3.internal.string_multimap;
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import deimos.cef3.internal.export;
+//import deimos.cef3.internal.export;
 import deimos.cef3.internal.string;
 
 extern(C) {

@@ -30,19 +30,19 @@ module deimos.cef3.internal.types;
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import deimos.cfe3.internal.build;
-import deimos.cfe3.internal.string;
-import deimos.cfe3.internal.string_list;
-import deimos.cfe3.internal.time;
+public import deimos.cef3.internal.build;
+public import deimos.cef3.internal.string;
+public import deimos.cef3.internal.string_list;
+public import deimos.cef3.internal.time;
 
 // Bring in platform-specific definitions.
-#if defined(OS_WIN)
+//static if defined(OS_WIN)
 version(Windows) {
-    import deimos.cfe3.internal.types_win;
+    public import deimos.cef3.internal.types_win;
 } else version(OSX) {
-    import deimos.cfe3.internal.types_mac;
+    public import deimos.cef3.internal.types_mac;
 } else version(Linux) {
-    import deimos.cfe3.internal.types_linux;
+    public import deimos.cef3.internal.types_linux;
 }
 
 //#include <stddef.h>         // For size_t

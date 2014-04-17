@@ -51,6 +51,8 @@ extern(C) {
     import deimos.cef3.load_handler;
     import deimos.cef3.render_handler;
     import deimos.cef3.request_handler;
+    import deimos.cef3.browser;
+    import deimos.cef3.process_message;
 
 
     ///
@@ -125,7 +127,7 @@ extern(C) {
         ///
         // Return the handler for off-screen rendering events.
         ///
-        extern(System) cef_render_handler_t* function(_cef_client_t* self) get_render_handler;
+        extern(System) cef_render_handler_t* function(cef_client_t* self) get_render_handler;
 
         ///
         // Return the handler for browser request events.

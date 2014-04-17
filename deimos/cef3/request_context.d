@@ -38,6 +38,7 @@ module deimos.cef3.request_context;
 
 extern(C) {
 
+import deimos.cef3.base;
 import deimos.cef3.request_context_handler;
 
 

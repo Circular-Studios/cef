@@ -79,7 +79,7 @@ struct cef_command_line_t {
     // The first argument must be the name of the program. This function is only
     // supported on non-Windows platforms.
     ///
-    extern(System) void function(cef_command_line_t* self, int argc, const(char)* const* argv) init_from_argv;
+    extern(System) void function(cef_command_line_t* self, int argc, const(char)** argv) init_from_argv;
 
     ///
     // Initialize the command line with the string returned by calling

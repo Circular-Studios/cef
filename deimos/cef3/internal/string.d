@@ -37,7 +37,7 @@ module deimos.cef3.internal.string;
 // #define CEF_STRING_TYPE_UTF8 1
 
 // Build with the UTF16 string type as default.
-enum CEF_STRING_TYPE_UTF16 = 1
+version = CEF_STRING_TYPE_UTF16;
 
 // Build with the wide string type as default.
 // #define CEF_STRING_TYPE_WIDE 1
@@ -94,5 +94,5 @@ version(CEF_STRING_TYPE_UTF8) {
     alias cef_string_wide_copy cef_string_to_wide;
     alias cef_string_wide_copy cef_string_from_wide;
 } else {
-    static assert(false, "Please choose a string type.")M
+    static assert(false, "Please choose a string type.");
 }

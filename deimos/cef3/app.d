@@ -32,11 +32,12 @@ module deimos.cef3.app;
 // ---------------------------------------------------------------------------
 
 extern(C) {
-    import deimos.cef3.base;
-    import deimos.cef3.browser_process_handler;
-    import deimos.cef3.render_process_handler;
-    import deimos.cef3.resource_bundle_handler;
-    import deimos.cef3.scheme;
+    public import deimos.cef3.base;
+    public import deimos.cef3.browser_process_handler;
+    public import deimos.cef3.render_process_handler;
+    public import deimos.cef3.resource_bundle_handler;
+    public import deimos.cef3.scheme;
+    public import deimos.cef3.command_line;
 
 
     ///

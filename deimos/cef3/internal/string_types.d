@@ -36,7 +36,7 @@ module deimos.cef3.internal.string_types;
 
 extern(C) {
     import deimos.cef3.internal.build;
-    import deimos.cef3.internal.export;
+    //import deimos.cef3.internal.export;
     import core.stdc.stddef;
 
     // CEF character type definitions. wchar_t is 2 bytes on Windows and 4 bytes on
@@ -60,7 +60,7 @@ extern(C) {
         char* str;
         size_t length;
         alias void function(char* str) dtor;
-        void (*dtor)(char* str);
+        //void (*dtor)(char* str);
     }
 
     struct cef_string_utf16_t {
@@ -77,7 +77,7 @@ extern(C) {
     ///
 
     int cef_string_wide_set(const(wchar_t)* src, size_t src_len,
-                            cef_string_wide_t)* output, int copy);
+                            cef_string_wide_t* output, int copy);
     int cef_string_utf8_set(const(char)* src, size_t src_len,
                             cef_string_utf8_t* output, int copy);
     int cef_string_utf16_set(const(char16)* src, size_t src_len,
@@ -88,15 +88,15 @@ extern(C) {
     // Convenience macros for copying values.
     ///
 
-    void cef_string_wide_copy(src, src_len, output) {
+    void cef_string_wide_copy(const(wchar_t)* src, size_t src_len, cef_string_utf8_t* output) {
         cef_string_wide_set(src, src_len, output, true);
     }
 
-    void cef_string_utf8_copy(src, src_len, output) {
+    void cef_string_utf8_copy(const(wchar_t)* src, size_t src_len, cef_string_utf8_t* output) {
         cef_string_utf8_set(src, src_len, output, true);
     }
 
-    void cef_string_utf16_copy(src, src_len, output) {
+    void cef_string_utf16_copy(const(wchar_t)* src, size_t src_len, cef_string_utf8_t* output) {
         cef_string_utf16_set(src, src_len, output, true);
     }
 
@@ -129,18 +129,18 @@ extern(C) {
     ///
 
     int cef_string_wide_to_utf8(const(wchar_t)* src, size_t src_len,
-                                cef_string_utf8_t)* output);
+                                cef_string_utf8_t* output);
     int cef_string_utf8_to_wide(const(char)* src, size_t src_len,
                                 cef_string_wide_t* output);
 
     int cef_string_wide_to_utf16(const(wchar_t)* src, size_t src_len,
                                  cef_string_utf16_t* output);
-    int cef_string_utf16_to_wide(const(char16* src, size_t src_len,
+    int cef_string_utf16_to_wide(const(char16)* src, size_t src_len,
                                  cef_string_wide_t* output);
 
     int cef_string_utf8_to_utf16(const(char)* src, size_t src_len,
                                  cef_string_utf16_t* output);
-    int cef_string_utf16_to_utf8(const(char16* src, size_t src_len,
+    int cef_string_utf16_to_utf8(const(char16)* src, size_t src_len,
                                  cef_string_utf8_t* output);
 
 

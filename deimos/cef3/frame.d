@@ -39,10 +39,12 @@ module deimos.cef3.rame;
 extern(C) {
 
 import deimos.cef3.base;
+import deimos.cef3.browser;
 import deimos.cef3.dom;
 import deimos.cef3.request;
 import deimos.cef3.stream;
 import deimos.cef3.string_visitor;
+import deimos.cef3.v8;
 
 
 ///

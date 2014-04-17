@@ -40,6 +40,8 @@ extern(C) {
 
 import deimos.cef3.base;
 import deimos.cef3.browser;
+import deimos.cef3.frame;
+import deimos.cef3.client;
 
 
 ///

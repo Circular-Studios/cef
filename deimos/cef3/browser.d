@@ -41,6 +41,7 @@ extern(C) {
     import deimos.cef3.frame;
     import deimos.cef3.process_message;
     import deimos.cef3.request_context;
+    import deimos.cef3.client;
 
     ///
     // Structure used to represent a browser window. When used in the browser
@@ -154,13 +155,13 @@ extern(C) {
         ///
         // Returns the names of all existing frames.
         ///
-        extern(System) void function(struct cef_browser_t* self, cef_string_list_t names) get_frame_names;
+        extern(System) void function(cef_browser_t* self, cef_string_list_t names) get_frame_names;
 
         //
         // Send a message to the specified |target_process|. Returns true (1) if the
         // message was sent successfully.
         ///
-        extern(System) int function(cef_browser_t* self, enum cef_process_id_t target_process,
+        extern(System) int function(cef_browser_t* self, cef_process_id_t target_process,
                                     cef_process_message_t* message) send_process_message;
     }
 

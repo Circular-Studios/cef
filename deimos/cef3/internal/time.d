@@ -30,7 +30,7 @@ module deimos.cef3.internal.types_time;
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 extern(C) {
-    import deimos.cef3.internal.export;
+    //import deimos.cef3.internal.export;
     import core.stdc.time;
 
     ///

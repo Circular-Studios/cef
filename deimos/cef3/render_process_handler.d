@@ -46,6 +46,7 @@ import deimos.cef3.load_handler;
 import deimos.cef3.process_message;
 import deimos.cef3.v8;
 import deimos.cef3.values;
+import deimos.cef3.request;
 
 
 ///

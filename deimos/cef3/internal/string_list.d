@@ -30,7 +30,7 @@ module deimos.cef3.internal.string_list;
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import deimos.cef3.internal.export;
+//import deimos.cef3.internal.export;
 import deimos.cef3.internal.string;
 
 extern(C) {

@@ -162,7 +162,7 @@ struct cef_v8handler_t {
                                 const(cef_string_t)* name,
                                 cef_v8value_t* object,
                                 size_t argumentsCount,
-                                cef_v8value_t* const* arguments,
+                                cef_v8value_t** arguments,
                                 cef_v8value_t** retval,
                                 cef_string_t* exception) execute;
 }
@@ -554,7 +554,7 @@ struct cef_v8value_t {
     // Returns NULL if this function is called incorrectly or an exception is
     // thrown.
     ///
-    extern(System) cef_v8value_t* function(cef_v8value_t* self, cef_v8value_t* object, size_t argumentsCount, cef_v8value_t* const* arguments) execute_function;
+    extern(System) cef_v8value_t* function(cef_v8value_t* self, cef_v8value_t* object, size_t argumentsCount, cef_v8value_t** arguments) execute_function;
 
     ///
     // Execute the function using the specified V8 context. |object| is the
@@ -564,7 +564,7 @@ struct cef_v8value_t {
     // success. Returns NULL if this function is called incorrectly or an
     // exception is thrown.
     ///
-    extern(System) cef_v8value_t* function(cef_v8value_t* self, cef_v8context_t* context, cef_v8value_t* object, size_t argumentsCount, cef_v8value_t* const* arguments) execute_function_with_context;
+    extern(System) cef_v8value_t* function(cef_v8value_t* self, cef_v8context_t* context, cef_v8value_t* object, size_t argumentsCount, cef_v8value_t** arguments) execute_function_with_context;
 }
 
 
