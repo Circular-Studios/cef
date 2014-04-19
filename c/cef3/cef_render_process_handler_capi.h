@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2014 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -38,16 +38,24 @@
 #define CEF_INCLUDE_CAPI_CEF_RENDER_PROCESS_HANDLER_CAPI_H_
 #pragma once
 
+#include "include/capi/cef_base_capi.h"
+#include "include/capi/cef_browser_capi.h"
+#include "include/capi/cef_dom_capi.h"
+#include "include/capi/cef_frame_capi.h"
+#include "include/capi/cef_load_handler_capi.h"
+#include "include/capi/cef_process_message_capi.h"
+#include "include/capi/cef_v8_capi.h"
+#include "include/capi/cef_values_capi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "include/capi/cef_base_capi.h"
-
 
 ///
 // Structure used to implement render process callbacks. The functions of this
-// structure will always be called on the render process main thread.
+// structure will be called on the render process main thread (TID_RENDERER)
+// unless otherwise indicated.
 ///
 typedef struct _cef_render_process_handler_t {
   ///
@@ -56,10 +64,14 @@ typedef struct _cef_render_process_handler_t {
   cef_base_t base;
 
   ///
-  // Called after the render process main thread has been created.
+  // Called after the render process main thread has been created. |extra_info|
+  // is a read-only value originating from
+  // cef_browser_process_handler_t::on_render_process_thread_created(). Do not
+  // keep a reference to |extra_info| outside of this function.
   ///
   void (CEF_CALLBACK *on_render_thread_created)(
-      struct _cef_render_process_handler_t* self);
+      struct _cef_render_process_handler_t* self,
+      struct _cef_list_value_t* extra_info);
 
   ///
   // Called after WebKit has been initialized.
@@ -68,7 +80,9 @@ typedef struct _cef_render_process_handler_t {
       struct _cef_render_process_handler_t* self);
 
   ///
-  // Called after a browser has been created.
+  // Called after a browser has been created. When browsing cross-origin a new
+  // browser will be created before the old browser with the same identifier is
+  // destroyed.
   ///
   void (CEF_CALLBACK *on_browser_created)(
       struct _cef_render_process_handler_t* self,
@@ -82,9 +96,29 @@ typedef struct _cef_render_process_handler_t {
       struct _cef_browser_t* browser);
 
   ///
+  // Return the handler for browser load status events.
+  ///
+  struct _cef_load_handler_t* (CEF_CALLBACK *get_load_handler)(
+      struct _cef_render_process_handler_t* self);
+
+  ///
+  // Called before browser navigation. Return true (1) to cancel the navigation
+  // or false (0) to allow the navigation to proceed. The |request| object
+  // cannot be modified in this callback.
+  ///
+  int (CEF_CALLBACK *on_before_navigation)(
+      struct _cef_render_process_handler_t* self,
+      struct _cef_browser_t* browser, struct _cef_frame_t* frame,
+      struct _cef_request_t* request, cef_navigation_type_t navigation_type,
+      int is_redirect);
+
+  ///
   // Called immediately after the V8 context for a frame has been created. To
   // retrieve the JavaScript 'window' object use the
-  // cef_v8context_t::get_global() function.
+  // cef_v8context_t::get_global() function. V8 handles can only be accessed
+  // from the thread on which they are created. A task runner for posting tasks
+  // on the associated thread can be retrieved via the
+  // cef_v8context_t::get_task_runner() function.
   ///
   void (CEF_CALLBACK *on_context_created)(
       struct _cef_render_process_handler_t* self,
@@ -99,6 +133,17 @@ typedef struct _cef_render_process_handler_t {
       struct _cef_render_process_handler_t* self,
       struct _cef_browser_t* browser, struct _cef_frame_t* frame,
       struct _cef_v8context_t* context);
+
+  ///
+  // Called for global uncaught exceptions in a frame. Execution of this
+  // callback is disabled by default. To enable set
+  // CefSettings.uncaught_exception_stack_size > 0.
+  ///
+  void (CEF_CALLBACK *on_uncaught_exception)(
+      struct _cef_render_process_handler_t* self,
+      struct _cef_browser_t* browser, struct _cef_frame_t* frame,
+      struct _cef_v8context_t* context, struct _cef_v8exception_t* exception,
+      struct _cef_v8stack_trace_t* stackTrace);
 
   ///
   // Called when a new node in the the browser gets focus. The |node| value may
@@ -120,7 +165,7 @@ typedef struct _cef_render_process_handler_t {
   ///
   int (CEF_CALLBACK *on_process_message_received)(
       struct _cef_render_process_handler_t* self,
-      struct _cef_browser_t* browser, enum cef_process_id_t source_process,
+      struct _cef_browser_t* browser, cef_process_id_t source_process,
       struct _cef_process_message_t* message);
 } cef_render_process_handler_t;
 

@@ -34,8 +34,8 @@
 // more information.
 //
 
-#ifndef CEF_INCLUDE_CAPI_CEF_RESPONSE_CAPI_H_
-#define CEF_INCLUDE_CAPI_CEF_RESPONSE_CAPI_H_
+#ifndef CEF_INCLUDE_CAPI_CEF_DRAG_DATA_CAPI_H_
+#define CEF_INCLUDE_CAPI_CEF_DRAG_DATA_CAPI_H_
 #pragma once
 
 #include "include/capi/cef_base_capi.h"
@@ -46,85 +46,91 @@ extern "C" {
 
 
 ///
-// Structure used to represent a web response. The functions of this structure
-// may be called on any thread.
+// Structure used to represent drag data. The functions of this structure may be
+// called on any thread.
 ///
-typedef struct _cef_response_t {
+typedef struct _cef_drag_data_t {
   ///
   // Base structure.
   ///
   cef_base_t base;
 
   ///
-  // Returns true (1) if this object is read-only.
+  // Returns true (1) if the drag data is a link.
   ///
-  int (CEF_CALLBACK *is_read_only)(struct _cef_response_t* self);
+  int (CEF_CALLBACK *is_link)(struct _cef_drag_data_t* self);
 
   ///
-  // Get the response status code.
+  // Returns true (1) if the drag data is a text or html fragment.
   ///
-  int (CEF_CALLBACK *get_status)(struct _cef_response_t* self);
+  int (CEF_CALLBACK *is_fragment)(struct _cef_drag_data_t* self);
 
   ///
-  // Set the response status code.
+  // Returns true (1) if the drag data is a file.
   ///
-  void (CEF_CALLBACK *set_status)(struct _cef_response_t* self, int status);
+  int (CEF_CALLBACK *is_file)(struct _cef_drag_data_t* self);
 
   ///
-  // Get the response status text.
+  // Return the link URL that is being dragged.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t (CEF_CALLBACK *get_status_text)(
-      struct _cef_response_t* self);
+  cef_string_userfree_t (CEF_CALLBACK *get_link_url)(
+      struct _cef_drag_data_t* self);
 
   ///
-  // Set the response status text.
-  ///
-  void (CEF_CALLBACK *set_status_text)(struct _cef_response_t* self,
-      const cef_string_t* statusText);
-
-  ///
-  // Get the response mime type.
+  // Return the title associated with the link being dragged.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t (CEF_CALLBACK *get_mime_type)(
-      struct _cef_response_t* self);
+  cef_string_userfree_t (CEF_CALLBACK *get_link_title)(
+      struct _cef_drag_data_t* self);
 
   ///
-  // Set the response mime type.
-  ///
-  void (CEF_CALLBACK *set_mime_type)(struct _cef_response_t* self,
-      const cef_string_t* mimeType);
-
-  ///
-  // Get the value for the specified response header field.
+  // Return the metadata, if any, associated with the link being dragged.
   ///
   // The resulting string must be freed by calling cef_string_userfree_free().
-  cef_string_userfree_t (CEF_CALLBACK *get_header)(struct _cef_response_t* self,
-      const cef_string_t* name);
+  cef_string_userfree_t (CEF_CALLBACK *get_link_metadata)(
+      struct _cef_drag_data_t* self);
 
   ///
-  // Get all response header fields.
+  // Return the plain text fragment that is being dragged.
   ///
-  void (CEF_CALLBACK *get_header_map)(struct _cef_response_t* self,
-      cef_string_multimap_t headerMap);
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t (CEF_CALLBACK *get_fragment_text)(
+      struct _cef_drag_data_t* self);
 
   ///
-  // Set all response header fields.
+  // Return the text/html fragment that is being dragged.
   ///
-  void (CEF_CALLBACK *set_header_map)(struct _cef_response_t* self,
-      cef_string_multimap_t headerMap);
-} cef_response_t;
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t (CEF_CALLBACK *get_fragment_html)(
+      struct _cef_drag_data_t* self);
 
+  ///
+  // Return the base URL that the fragment came from. This value is used for
+  // resolving relative URLs and may be NULL.
+  ///
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t (CEF_CALLBACK *get_fragment_base_url)(
+      struct _cef_drag_data_t* self);
 
-///
-// Create a new cef_response_t object.
-///
-CEF_EXPORT cef_response_t* cef_response_create();
+  ///
+  // Return the name of the file being dragged out of the browser window.
+  ///
+  // The resulting string must be freed by calling cef_string_userfree_free().
+  cef_string_userfree_t (CEF_CALLBACK *get_file_name)(
+      struct _cef_drag_data_t* self);
+
+  ///
+  // Retrieve the list of file names that are being dragged into the browser
+  // window.
+  ///
+  int (CEF_CALLBACK *get_file_names)(struct _cef_drag_data_t* self,
+      cef_string_list_t names);
+} cef_drag_data_t;
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_RESPONSE_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_DRAG_DATA_CAPI_H_

@@ -1,4 +1,4 @@
-// Copyright (c) 2010 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2014 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -43,9 +43,10 @@ extern "C" {
 #endif
 
 // Handle types.
-#define cef_cursor_handle_t GtkCursor*
+#define cef_cursor_handle_t GdkCursor*
 #define cef_event_handle_t GdkEvent*
 #define cef_window_handle_t GtkWidget*
+#define cef_text_input_context_t void*
 
 ///
 // Structure representing CefExecuteProcess arguments.
@@ -59,10 +60,34 @@ typedef struct _cef_main_args_t {
 // Class representing window information.
 ///
 typedef struct _cef_window_info_t {
-  // Pointer for the parent GtkBox widget.
+  ///
+  // Pointer for the parent widget.
+  ///
   cef_window_handle_t parent_widget;
 
-  // Pointer for the new browser widget.
+  ///
+  // Set to true (1) to create the browser using windowless (off-screen)
+  // rendering. No widget will be created for the browser and all rendering will
+  // occur via the CefRenderHandler interface. The |parent_widget| value will be
+  // used to identify monitor info and to act as the parent widget for dialogs,
+  // context menus, etc. If |parent_widget| is not provided then the main screen
+  // monitor will be used and some functionality that requires a parent widget
+  // may not function correctly. In order to create windowless browsers the
+  // CefSettings.windowless_rendering_enabled value must be set to true.
+  ///
+  int windowless_rendering_enabled;
+
+  ///
+  // Set to true (1) to enable transparent painting in combination with
+  // windowless rendering. When this value is true a transparent background
+  // color will be used (RGBA=0x00000000). When this value is false the
+  // background will be white and opaque.
+  ///
+  int transparent_painting_enabled;
+
+  ///
+  // Pointer for the new browser widget. Only used with windowed rendering.
+  ///
   cef_window_handle_t widget;
 } cef_window_info_t;
 

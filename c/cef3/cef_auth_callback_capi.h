@@ -34,13 +34,11 @@
 // more information.
 //
 
-#ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
-#define CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
+#ifndef CEF_INCLUDE_CAPI_CEF_AUTH_CALLBACK_CAPI_H_
+#define CEF_INCLUDE_CAPI_CEF_AUTH_CALLBACK_CAPI_H_
 #pragma once
 
 #include "include/capi/cef_base_capi.h"
-#include "include/capi/cef_command_line_capi.h"
-#include "include/capi/cef_values_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,49 +46,30 @@ extern "C" {
 
 
 ///
-// Structure used to implement browser process callbacks. The functions of this
-// structure will be called on the browser process main thread unless otherwise
-// indicated.
+// Callback structure used for asynchronous continuation of authentication
+// requests.
 ///
-typedef struct _cef_browser_process_handler_t {
+typedef struct _cef_auth_callback_t {
   ///
   // Base structure.
   ///
   cef_base_t base;
 
   ///
-  // Called on the browser process UI thread immediately after the CEF context
-  // has been initialized.
+  // Continue the authentication request.
   ///
-  void (CEF_CALLBACK *on_context_initialized)(
-      struct _cef_browser_process_handler_t* self);
+  void (CEF_CALLBACK *cont)(struct _cef_auth_callback_t* self,
+      const cef_string_t* username, const cef_string_t* password);
 
   ///
-  // Called before a child process is launched. Will be called on the browser
-  // process UI thread when launching a render process and on the browser
-  // process IO thread when launching a GPU or plugin process. Provides an
-  // opportunity to modify the child process command line. Do not keep a
-  // reference to |command_line| outside of this function.
+  // Cancel the authentication request.
   ///
-  void (CEF_CALLBACK *on_before_child_process_launch)(
-      struct _cef_browser_process_handler_t* self,
-      struct _cef_command_line_t* command_line);
-
-  ///
-  // Called on the browser process IO thread after the main thread has been
-  // created for a new render process. Provides an opportunity to specify extra
-  // information that will be passed to
-  // cef_render_process_handler_t::on_render_thread_created() in the render
-  // process. Do not keep a reference to |extra_info| outside of this function.
-  ///
-  void (CEF_CALLBACK *on_render_process_thread_created)(
-      struct _cef_browser_process_handler_t* self,
-      struct _cef_list_value_t* extra_info);
-} cef_browser_process_handler_t;
+  void (CEF_CALLBACK *cancel)(struct _cef_auth_callback_t* self);
+} cef_auth_callback_t;
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_AUTH_CALLBACK_CAPI_H_

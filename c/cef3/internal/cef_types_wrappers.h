@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2013 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -174,6 +174,60 @@ inline bool operator!=(const CefRect& a, const CefRect& b) {
   return !(a == b);
 }
 
+struct CefScreenInfoTraits {
+  typedef cef_screen_info_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src, struct_type* target,
+      bool copy) {
+    target->device_scale_factor = src->device_scale_factor;
+    target->depth = src->depth;
+    target->depth_per_component = src->depth_per_component;
+    target->is_monochrome = src->is_monochrome;
+    target->rect = src->rect;
+    target->available_rect = src->available_rect;
+  }
+};
+
+///
+// Class representing the virtual screen information for use when window rendering
+// is disabled.
+///
+class CefScreenInfo : public CefStructBase<CefScreenInfoTraits> {
+ public:
+  typedef CefStructBase<CefScreenInfoTraits> parent;
+
+  CefScreenInfo() : parent() {}
+  CefScreenInfo(const cef_screen_info_t& r) : parent(r) {}  // NOLINT(runtime/explicit)
+  CefScreenInfo(const CefScreenInfo& r) : parent(r) {}  // NOLINT(runtime/explicit)
+  CefScreenInfo(float device_scale_factor,
+                int depth,
+                int depth_per_component,
+                bool is_monochrome,
+                const CefRect& rect,
+                const CefRect& available_rect) : parent() {
+    Set(device_scale_factor, depth, depth_per_component,
+        is_monochrome, rect, available_rect);
+  }
+
+  void Set(float device_scale_factor,
+           int depth,
+           int depth_per_component,
+           bool is_monochrome,
+           const CefRect& rect,
+           const CefRect& available_rect) {
+    this->device_scale_factor = device_scale_factor;
+    this->depth = depth;
+    this->depth_per_component = depth_per_component;
+    this->is_monochrome = is_monochrome;
+    this->rect = rect;
+    this->available_rect = available_rect;
+  }
+};
+
 struct CefKeyEventTraits {
   typedef cef_key_event_t struct_type;
 
@@ -199,6 +253,25 @@ struct CefKeyEventTraits {
 ///
 typedef CefStructBase<CefKeyEventTraits> CefKeyEvent;
 
+struct CefMouseEventTraits {
+  typedef cef_mouse_event_t struct_type;
+
+  static inline void init(struct_type* s) {}
+
+  static inline void clear(struct_type* s) {}
+
+  static inline void set(const struct_type* src, struct_type* target,
+      bool copy) {
+    target->x = src->x;
+    target->y = src->y;
+    target->modifiers = src->modifiers;
+  }
+};
+
+///
+// Class representing a mouse event.
+///
+typedef CefStructBase<CefMouseEventTraits> CefMouseEvent;
 
 struct CefPopupFeaturesTraits {
   typedef cef_popup_features_t struct_type;
@@ -271,14 +344,18 @@ struct CefSettingsTraits {
   static inline void set(const struct_type* src, struct_type* target,
       bool copy) {
     target->single_process = src->single_process;
+    target->no_sandbox = src->no_sandbox;
     cef_string_set(src->browser_subprocess_path.str,
         src->browser_subprocess_path.length,
         &target->browser_subprocess_path, copy);
     target->multi_threaded_message_loop = src->multi_threaded_message_loop;
+    target->windowless_rendering_enabled = src->windowless_rendering_enabled;
     target->command_line_args_disabled = src->command_line_args_disabled;
 
     cef_string_set(src->cache_path.str, src->cache_path.length,
         &target->cache_path, copy);
+    target->persist_session_cookies = src->persist_session_cookies;
+
     cef_string_set(src->user_agent.str, src->user_agent.length,
         &target->user_agent, copy);
     cef_string_set(src->product_version.str, src->product_version.length,
@@ -288,11 +365,9 @@ struct CefSettingsTraits {
     cef_string_set(src->log_file.str, src->log_file.length, &target->log_file,
         copy);
     target->log_severity = src->log_severity;
+    target->release_dcheck_enabled = src->release_dcheck_enabled;
     cef_string_set(src->javascript_flags.str, src->javascript_flags.length,
         &target->javascript_flags, copy);
-
-    target->auto_detect_proxy_settings_enabled =
-        src->auto_detect_proxy_settings_enabled;
 
     cef_string_set(src->resources_dir_path.str, src->resources_dir_path.length,
         &target->resources_dir_path, copy);
@@ -300,6 +375,10 @@ struct CefSettingsTraits {
         &target->locales_dir_path, copy);
     target->pack_loading_disabled = src->pack_loading_disabled;
     target->remote_debugging_port = src->remote_debugging_port;
+    target->uncaught_exception_stack_size = src->uncaught_exception_stack_size;
+    target->context_safety_implementation = src->context_safety_implementation;
+    target->ignore_certificate_errors = src->ignore_certificate_errors;
+    target->background_color = src->background_color;
   }
 };
 
@@ -324,7 +403,6 @@ struct CefBrowserSettingsTraits {
     cef_string_clear(&s->cursive_font_family);
     cef_string_clear(&s->fantasy_font_family);
     cef_string_clear(&s->default_encoding);
-    cef_string_clear(&s->user_style_sheet_location);
   }
 
   static inline void set(const struct_type* src, struct_type* target,
@@ -347,60 +425,33 @@ struct CefBrowserSettingsTraits {
     target->default_fixed_font_size = src->default_fixed_font_size;
     target->minimum_font_size = src->minimum_font_size;
     target->minimum_logical_font_size = src->minimum_logical_font_size;
-    target->remote_fonts_disabled = src->remote_fonts_disabled;
 
     cef_string_set(src->default_encoding.str, src->default_encoding.length,
         &target->default_encoding, copy);
 
-    target->encoding_detector_enabled = src->encoding_detector_enabled;
-    target->javascript_disabled = src->javascript_disabled;
-    target->javascript_open_windows_disallowed =
-        src->javascript_open_windows_disallowed;
-    target->javascript_close_windows_disallowed =
-        src->javascript_close_windows_disallowed;
-    target->javascript_access_clipboard_disallowed =
-        src->javascript_access_clipboard_disallowed;
-    target->dom_paste_disabled = src->dom_paste_disabled;
-    target->caret_browsing_enabled = src->caret_browsing_enabled;
-    target->java_disabled = src->java_disabled;
-    target->plugins_disabled = src->plugins_disabled;
-    target->universal_access_from_file_urls_allowed =
-        src->universal_access_from_file_urls_allowed;
-    target->file_access_from_file_urls_allowed =
-        src->file_access_from_file_urls_allowed;
-    target->web_security_disabled = src->web_security_disabled;
-    target->xss_auditor_enabled = src->xss_auditor_enabled;
-    target->image_load_disabled = src->image_load_disabled;
-    target->shrink_standalone_images_to_fit =
-        src->shrink_standalone_images_to_fit;
-    target->site_specific_quirks_disabled = src->site_specific_quirks_disabled;
-    target->text_area_resize_disabled = src->text_area_resize_disabled;
-    target->page_cache_disabled = src->page_cache_disabled;
-    target->tab_to_links_disabled = src->tab_to_links_disabled;
-    target->hyperlink_auditing_disabled = src->hyperlink_auditing_disabled;
-    target->user_style_sheet_enabled = src->user_style_sheet_enabled;
-
-    cef_string_set(src->user_style_sheet_location.str,
-        src->user_style_sheet_location.length,
-        &target->user_style_sheet_location, copy);
-
-    target->author_and_user_styles_disabled =
-        src->author_and_user_styles_disabled;
-    target->local_storage_disabled = src->local_storage_disabled;
-    target->databases_disabled = src->databases_disabled;
-    target->application_cache_disabled = src->application_cache_disabled;
-    target->webgl_disabled = src->webgl_disabled;
-    target->accelerated_compositing_disabled =
-        src->accelerated_compositing_disabled;
-    target->accelerated_layers_disabled = src->accelerated_layers_disabled;
-    target->accelerated_video_disabled = src->accelerated_video_disabled;
-    target->accelerated_2d_canvas_disabled =
-        src->accelerated_2d_canvas_disabled;
-    target->accelerated_painting_enabled = src->accelerated_painting_enabled;
-    target->accelerated_filters_enabled = src->accelerated_filters_enabled;
-    target->accelerated_plugins_disabled = src->accelerated_plugins_disabled;
-    target->developer_tools_disabled = src->developer_tools_disabled;
-    target->fullscreen_enabled = src->fullscreen_enabled;
+    target->remote_fonts = src->remote_fonts;
+    target->javascript = src->javascript;
+    target->javascript_open_windows = src->javascript_open_windows;
+    target->javascript_close_windows = src->javascript_close_windows;
+    target->javascript_access_clipboard = src->javascript_access_clipboard;
+    target->javascript_dom_paste = src->javascript_dom_paste;
+    target->caret_browsing = src->caret_browsing;
+    target->java = src->java;
+    target->plugins = src->plugins;
+    target->universal_access_from_file_urls =
+        src->universal_access_from_file_urls;
+    target->file_access_from_file_urls = src->file_access_from_file_urls;
+    target->web_security = src->web_security;
+    target->image_loading = src->image_loading;
+    target->image_shrink_standalone_to_fit =
+        src->image_shrink_standalone_to_fit;
+    target->text_area_resize = src->text_area_resize;
+    target->tab_to_links = src->tab_to_links;
+    target->local_storage = src->local_storage;
+    target->databases= src->databases;
+    target->application_cache = src->application_cache;
+    target->webgl = src->webgl;
+    target->accelerated_compositing = src->accelerated_compositing;
   }
 };
 
@@ -422,6 +473,7 @@ struct CefURLPartsTraits {
     cef_string_clear(&s->password);
     cef_string_clear(&s->host);
     cef_string_clear(&s->port);
+    cef_string_clear(&s->origin);
     cef_string_clear(&s->path);
     cef_string_clear(&s->query);
   }
@@ -436,6 +488,7 @@ struct CefURLPartsTraits {
         copy);
     cef_string_set(src->host.str, src->host.length, &target->host, copy);
     cef_string_set(src->port.str, src->port.length, &target->port, copy);
+    cef_string_set(src->origin.str, src->origin.length, &target->origin, copy);
     cef_string_set(src->path.str, src->path.length, &target->path, copy);
     cef_string_set(src->query.str, src->query.length, &target->query, copy);
   }
@@ -494,6 +547,18 @@ class CefTime : public CefStructBase<CefTimeTraits> {
     cef_time_to_doublet(this, &time);
     return time;
   }
+
+  // Set this object to now.
+  void Now() {
+    cef_time_now(this);
+  }
+
+  // Return the delta between this object and |other| in milliseconds.
+  long long Delta(const CefTime& other) {
+    long long delta = 0;
+    cef_time_delta(this, &other, &delta);
+    return delta;
+  }
 };
 
 
@@ -529,65 +594,6 @@ struct CefCookieTraits {
 ///
 typedef CefStructBase<CefCookieTraits> CefCookie;
 
-
-struct CefProxyInfoTraits {
-  typedef cef_proxy_info_t struct_type;
-
-  static inline void init(struct_type* s) {}
-
-  static inline void clear(struct_type* s) {
-    cef_string_clear(&s->proxyList);
-  }
-
-  static inline void set(const struct_type* src, struct_type* target,
-      bool copy) {
-    target->proxyType = src->proxyType;
-    cef_string_set(src->proxyList.str, src->proxyList.length,
-        &target->proxyList, copy);
-  }
-};
-
-///
-// Class representing the results of proxy resolution.
-///
-class CefProxyInfo : public CefStructBase<CefProxyInfoTraits> {
- public:
-  ///
-  // Use a direction connection instead of a proxy.
-  ///
-  void UseDirect() {
-    proxyType = CEF_PROXY_TYPE_DIRECT;
-  }
-
-  ///
-  // Use one or more named proxy servers specified in WinHTTP format. Each proxy
-  // server is of the form:
-  //
-  // [<scheme>"://"]<server>[":"<port>]
-  //
-  // Multiple values may be separated by semicolons or whitespace. For example,
-  // "foo1:80;foo2:80".
-  ///
-  void UseNamedProxy(const CefString& proxy_uri_list) {
-    proxyType = CEF_PROXY_TYPE_NAMED;
-    (CefString(&proxyList)) = proxy_uri_list;
-  }
-
-  ///
-  // Use one or more named proxy servers specified in PAC script format. For
-  // example, "PROXY foobar:99; SOCKS fml:2; DIRECT".
-  ///
-  void UsePacString(const CefString& pac_string) {
-    proxyType = CEF_PROXY_TYPE_PAC_STRING;
-    (CefString(&proxyList)) = pac_string;
-  }
-
-  bool IsDirect() const { return proxyType == CEF_PROXY_TYPE_DIRECT; }
-  bool IsNamedProxy() const { return proxyType == CEF_PROXY_TYPE_NAMED; }
-  bool IsPacString() const { return proxyType == CEF_PROXY_TYPE_PAC_STRING; }
-
-  CefString ProxyList() const { return CefString(&proxyList); }
-};
 
 struct CefGeopositionTraits {
   typedef cef_geoposition_t struct_type;

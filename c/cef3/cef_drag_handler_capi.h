@@ -34,13 +34,13 @@
 // more information.
 //
 
-#ifndef CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
-#define CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
+#ifndef CEF_INCLUDE_CAPI_CEF_DRAG_HANDLER_CAPI_H_
+#define CEF_INCLUDE_CAPI_CEF_DRAG_HANDLER_CAPI_H_
 #pragma once
 
 #include "include/capi/cef_base_capi.h"
-#include "include/capi/cef_command_line_capi.h"
-#include "include/capi/cef_values_capi.h"
+#include "include/capi/cef_browser_capi.h"
+#include "include/capi/cef_drag_data_capi.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,49 +48,29 @@ extern "C" {
 
 
 ///
-// Structure used to implement browser process callbacks. The functions of this
-// structure will be called on the browser process main thread unless otherwise
-// indicated.
+// Implement this structure to handle events related to dragging. The functions
+// of this structure will be called on the UI thread.
 ///
-typedef struct _cef_browser_process_handler_t {
+typedef struct _cef_drag_handler_t {
   ///
   // Base structure.
   ///
   cef_base_t base;
 
   ///
-  // Called on the browser process UI thread immediately after the CEF context
-  // has been initialized.
+  // Called when an external drag event enters the browser window. |dragData|
+  // contains the drag event data and |mask| represents the type of drag
+  // operation. Return false (0) for default drag handling behavior or true (1)
+  // to cancel the drag event.
   ///
-  void (CEF_CALLBACK *on_context_initialized)(
-      struct _cef_browser_process_handler_t* self);
-
-  ///
-  // Called before a child process is launched. Will be called on the browser
-  // process UI thread when launching a render process and on the browser
-  // process IO thread when launching a GPU or plugin process. Provides an
-  // opportunity to modify the child process command line. Do not keep a
-  // reference to |command_line| outside of this function.
-  ///
-  void (CEF_CALLBACK *on_before_child_process_launch)(
-      struct _cef_browser_process_handler_t* self,
-      struct _cef_command_line_t* command_line);
-
-  ///
-  // Called on the browser process IO thread after the main thread has been
-  // created for a new render process. Provides an opportunity to specify extra
-  // information that will be passed to
-  // cef_render_process_handler_t::on_render_thread_created() in the render
-  // process. Do not keep a reference to |extra_info| outside of this function.
-  ///
-  void (CEF_CALLBACK *on_render_process_thread_created)(
-      struct _cef_browser_process_handler_t* self,
-      struct _cef_list_value_t* extra_info);
-} cef_browser_process_handler_t;
+  int (CEF_CALLBACK *on_drag_enter)(struct _cef_drag_handler_t* self,
+      struct _cef_browser_t* browser, struct _cef_drag_data_t* dragData,
+      cef_drag_operations_mask_t mask);
+} cef_drag_handler_t;
 
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // CEF_INCLUDE_CAPI_CEF_BROWSER_PROCESS_HANDLER_CAPI_H_
+#endif  // CEF_INCLUDE_CAPI_CEF_DRAG_HANDLER_CAPI_H_

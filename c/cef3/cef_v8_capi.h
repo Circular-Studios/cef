@@ -1,4 +1,4 @@
-// Copyright (c) 2012 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2014 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -38,75 +38,26 @@
 #define CEF_INCLUDE_CAPI_CEF_V8_CAPI_H_
 #pragma once
 
+#include "include/capi/cef_base_capi.h"
+#include "include/capi/cef_browser_capi.h"
+#include "include/capi/cef_frame_capi.h"
+#include "include/capi/cef_task_capi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "include/capi/cef_base_capi.h"
-
-
-///
-// Register a new V8 extension with the specified JavaScript extension code and
-// handler. Functions implemented by the handler are prototyped using the
-// keyword 'native'. The calling of a native function is restricted to the scope
-// in which the prototype of the native function is defined. This function may
-// only be called on the render process main thread.
-//
-// Example JavaScript extension code: <pre>
-//   // create the 'example' global object if it doesn't already exist.
-//   if (!example)
-//     example = {};
-//   // create the 'example.test' global object if it doesn't already exist.
-//   if (!example.test)
-//     example.test = {};
-//   (function() {
-//     // Define the function 'example.test.myfunction'.
-//     example.test.myfunction = function() {
-//       // Call CefV8Handler::Execute() with the function name 'MyFunction'
-//       // and no arguments.
-//       native function MyFunction();
-//       return MyFunction();
-//     };
-//     // Define the getter function for parameter 'example.test.myparam'.
-//     example.test.__defineGetter__('myparam', function() {
-//       // Call CefV8Handler::Execute() with the function name 'GetMyParam'
-//       // and no arguments.
-//       native function GetMyParam();
-//       return GetMyParam();
-//     });
-//     // Define the setter function for parameter 'example.test.myparam'.
-//     example.test.__defineSetter__('myparam', function(b) {
-//       // Call CefV8Handler::Execute() with the function name 'SetMyParam'
-//       // and a single argument.
-//       native function SetMyParam();
-//       if(b) SetMyParam(b);
-//     });
-//
-//     // Extension definitions can also contain normal JavaScript variables
-//     // and functions.
-//     var myint = 0;
-//     example.test.increment = function() {
-//       myint += 1;
-//       return myint;
-//     };
-//   })();
-// </pre> Example usage in the page: <pre>
-//   // Call the function.
-//   example.test.myfunction();
-//   // Set the parameter.
-//   example.test.myparam = value;
-//   // Get the parameter.
-//   value = example.test.myparam;
-//   // Call another function.
-//   example.test.increment();
-// </pre>
-///
-CEF_EXPORT int cef_register_extension(const cef_string_t* extension_name,
-    const cef_string_t* javascript_code, struct _cef_v8handler_t* handler);
+struct _cef_v8exception_t;
+struct _cef_v8handler_t;
+struct _cef_v8stack_frame_t;
+struct _cef_v8value_t;
 
 ///
-// Structure that encapsulates a V8 context handle. The functions of this
-// structure may only be called on the render process main thread.
+// Structure representing a V8 context handle. V8 handles can only be accessed
+// from the thread on which they are created. Valid threads for creating a V8
+// handle include the render process main thread (TID_RENDERER) and WebWorker
+// threads. A task runner for posting tasks on the associated thread can be
+// retrieved via the cef_v8context_t::get_task_runner() function.
 ///
 typedef struct _cef_v8context_t {
   ///
@@ -115,13 +66,30 @@ typedef struct _cef_v8context_t {
   cef_base_t base;
 
   ///
-  // Returns the browser for this context.
+  // Returns the task runner associated with this context. V8 handles can only
+  // be accessed from the thread on which they are created. This function can be
+  // called on any render process thread.
+  ///
+  struct _cef_task_runner_t* (CEF_CALLBACK *get_task_runner)(
+      struct _cef_v8context_t* self);
+
+  ///
+  // Returns true (1) if the underlying handle is valid and it can be accessed
+  // on the current thread. Do not call any other functions if this function
+  // returns false (0).
+  ///
+  int (CEF_CALLBACK *is_valid)(struct _cef_v8context_t* self);
+
+  ///
+  // Returns the browser for this context. This function will return an NULL
+  // reference for WebWorker contexts.
   ///
   struct _cef_browser_t* (CEF_CALLBACK *get_browser)(
       struct _cef_v8context_t* self);
 
   ///
-  // Returns the frame for this context.
+  // Returns the frame for this context. This function will return an NULL
+  // reference for WebWorker contexts.
   ///
   struct _cef_frame_t* (CEF_CALLBACK *get_frame)(struct _cef_v8context_t* self);
 
@@ -184,8 +152,8 @@ CEF_EXPORT int cef_v8context_in_context();
 
 ///
 // Structure that should be implemented to handle V8 function calls. The
-// functions of this structure will always be called on the render process main
-// thread.
+// functions of this structure will be called on the thread associated with the
+// V8 function.
 ///
 typedef struct _cef_v8handler_t {
   ///
@@ -210,8 +178,8 @@ typedef struct _cef_v8handler_t {
 ///
 // Structure that should be implemented to handle V8 accessor calls. Accessor
 // identifiers are registered by calling cef_v8value_t::set_value_byaccessor().
-// The functions of this structure will always be called on the render process
-// main thread.
+// The functions of this structure will be called on the thread associated with
+// the V8 accessor.
 ///
 typedef struct _cef_v8accessor_t {
   ///
@@ -244,7 +212,8 @@ typedef struct _cef_v8accessor_t {
 
 
 ///
-// Structure representing a V8 exception.
+// Structure representing a V8 exception. The functions of this structure may be
+// called on any render process thread.
 ///
 typedef struct _cef_v8exception_t {
   ///
@@ -307,14 +276,24 @@ typedef struct _cef_v8exception_t {
 
 
 ///
-// Structure representing a V8 value. The functions of this structure may only
-// be called on the render process main thread.
+// Structure representing a V8 value handle. V8 handles can only be accessed
+// from the thread on which they are created. Valid threads for creating a V8
+// handle include the render process main thread (TID_RENDERER) and WebWorker
+// threads. A task runner for posting tasks on the associated thread can be
+// retrieved via the cef_v8context_t::get_task_runner() function.
 ///
 typedef struct _cef_v8value_t {
   ///
   // Base structure.
   ///
   cef_base_t base;
+
+  ///
+  // Returns true (1) if the underlying handle is valid and it can be accessed
+  // on the current thread. Do not call any other functions if this function
+  // returns false (0).
+  ///
+  int (CEF_CALLBACK *is_valid)(struct _cef_v8value_t* self);
 
   ///
   // True if the value type is undefined.
@@ -511,7 +490,7 @@ typedef struct _cef_v8value_t {
   ///
   int (CEF_CALLBACK *set_value_bykey)(struct _cef_v8value_t* self,
       const cef_string_t* key, struct _cef_v8value_t* value,
-      enum cef_v8_propertyattribute_t attribute);
+      cef_v8_propertyattribute_t attribute);
 
   ///
   // Associates a value with the specified identifier and returns true (1) on
@@ -530,8 +509,8 @@ typedef struct _cef_v8value_t {
   // values this function will return true (1) even though assignment failed.
   ///
   int (CEF_CALLBACK *set_value_byaccessor)(struct _cef_v8value_t* self,
-      const cef_string_t* key, enum cef_v8_accesscontrol_t settings,
-      enum cef_v8_propertyattribute_t attribute);
+      const cef_string_t* key, cef_v8_accesscontrol_t settings,
+      cef_v8_propertyattribute_t attribute);
 
   ///
   // Read the keys for the object's values into the specified vector. Integer-
@@ -701,14 +680,24 @@ CEF_EXPORT cef_v8value_t* cef_v8value_create_function(const cef_string_t* name,
 
 
 ///
-// Structure representing a V8 stack trace. The functions of this structure may
-// only be called on the render process main thread.
+// Structure representing a V8 stack trace handle. V8 handles can only be
+// accessed from the thread on which they are created. Valid threads for
+// creating a V8 handle include the render process main thread (TID_RENDERER)
+// and WebWorker threads. A task runner for posting tasks on the associated
+// thread can be retrieved via the cef_v8context_t::get_task_runner() function.
 ///
 typedef struct _cef_v8stack_trace_t {
   ///
   // Base structure.
   ///
   cef_base_t base;
+
+  ///
+  // Returns true (1) if the underlying handle is valid and it can be accessed
+  // on the current thread. Do not call any other functions if this function
+  // returns false (0).
+  ///
+  int (CEF_CALLBACK *is_valid)(struct _cef_v8stack_trace_t* self);
 
   ///
   // Returns the number of stack frames.
@@ -731,14 +720,24 @@ CEF_EXPORT cef_v8stack_trace_t* cef_v8stack_trace_get_current(int frame_limit);
 
 
 ///
-// Structure representing a V8 stack frame. The functions of this structure may
-// only be called on the render process main thread.
+// Structure representing a V8 stack frame handle. V8 handles can only be
+// accessed from the thread on which they are created. Valid threads for
+// creating a V8 handle include the render process main thread (TID_RENDERER)
+// and WebWorker threads. A task runner for posting tasks on the associated
+// thread can be retrieved via the cef_v8context_t::get_task_runner() function.
 ///
 typedef struct _cef_v8stack_frame_t {
   ///
   // Base structure.
   ///
   cef_base_t base;
+
+  ///
+  // Returns true (1) if the underlying handle is valid and it can be accessed
+  // on the current thread. Do not call any other functions if this function
+  // returns false (0).
+  ///
+  int (CEF_CALLBACK *is_valid)(struct _cef_v8stack_frame_t* self);
 
   ///
   // Returns the name of the resource script that contains the function.
@@ -785,6 +784,65 @@ typedef struct _cef_v8stack_frame_t {
   int (CEF_CALLBACK *is_constructor)(struct _cef_v8stack_frame_t* self);
 } cef_v8stack_frame_t;
 
+
+///
+// Register a new V8 extension with the specified JavaScript extension code and
+// handler. Functions implemented by the handler are prototyped using the
+// keyword 'native'. The calling of a native function is restricted to the scope
+// in which the prototype of the native function is defined. This function may
+// only be called on the render process main thread.
+//
+// Example JavaScript extension code: <pre>
+//   // create the 'example' global object if it doesn't already exist.
+//   if (!example)
+//     example = {};
+//   // create the 'example.test' global object if it doesn't already exist.
+//   if (!example.test)
+//     example.test = {};
+//   (function() {
+//     // Define the function 'example.test.myfunction'.
+//     example.test.myfunction = function() {
+//       // Call CefV8Handler::Execute() with the function name 'MyFunction'
+//       // and no arguments.
+//       native function MyFunction();
+//       return MyFunction();
+//     };
+//     // Define the getter function for parameter 'example.test.myparam'.
+//     example.test.__defineGetter__('myparam', function() {
+//       // Call CefV8Handler::Execute() with the function name 'GetMyParam'
+//       // and no arguments.
+//       native function GetMyParam();
+//       return GetMyParam();
+//     });
+//     // Define the setter function for parameter 'example.test.myparam'.
+//     example.test.__defineSetter__('myparam', function(b) {
+//       // Call CefV8Handler::Execute() with the function name 'SetMyParam'
+//       // and a single argument.
+//       native function SetMyParam();
+//       if(b) SetMyParam(b);
+//     });
+//
+//     // Extension definitions can also contain normal JavaScript variables
+//     // and functions.
+//     var myint = 0;
+//     example.test.increment = function() {
+//       myint += 1;
+//       return myint;
+//     };
+//   })();
+// </pre> Example usage in the page: <pre>
+//   // Call the function.
+//   example.test.myfunction();
+//   // Set the parameter.
+//   example.test.myparam = value;
+//   // Get the parameter.
+//   value = example.test.myparam;
+//   // Call another function.
+//   example.test.increment();
+// </pre>
+///
+CEF_EXPORT int cef_register_extension(const cef_string_t* extension_name,
+    const cef_string_t* javascript_code, cef_v8handler_t* handler);
 
 #ifdef __cplusplus
 }

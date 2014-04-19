@@ -1,4 +1,4 @@
-// Copyright (c) 2010 Marshall A. Greenblatt. All rights reserved.
+// Copyright (c) 2014 Marshall A. Greenblatt. All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
@@ -46,6 +46,7 @@
 #include "include/internal/cef_types_linux.h"
 #endif
 
+#include <limits.h>         // For UINT_MAX
 #include <stddef.h>         // For size_t
 
 // The NSPR system headers define 64-bit as |long| when possible, except on
@@ -84,6 +85,39 @@ typedef unsigned short      char16;
 #endif
 #endif
 
+// 32-bit ARGB color value, not premultiplied. The color components are always
+// in a known order. Equivalent to the SkColor type.
+typedef uint32              cef_color_t;
+
+// Return the alpha byte from a cef_color_t value.
+#define CefColorGetA(color)      (((color) >> 24) & 0xFF)
+// Return the red byte from a cef_color_t value.
+#define CefColorGetR(color)      (((color) >> 16) & 0xFF)
+// Return the green byte from a cef_color_t value.
+#define CefColorGetG(color)      (((color) >>  8) & 0xFF)
+// Return the blue byte from a cef_color_t value.
+#define CefColorGetB(color)      (((color) >>  0) & 0xFF)
+
+// Return an cef_color_t value with the specified byte component values.
+#define CefColorSetARGB(a, r, g, b) \
+    static_cast<cef_color_t>( \
+        (static_cast<unsigned>(a) << 24) | \
+        (static_cast<unsigned>(r) << 16) | \
+        (static_cast<unsigned>(g) << 8) | \
+        (static_cast<unsigned>(b) << 0))
+
+// Return an int64 value with the specified low and high int32 component values.
+#define CefInt64Set(int32_low, int32_high) \
+    static_cast<int64>((static_cast<uint32>(int32_low)) | \
+        (static_cast<int64>(static_cast<int32>(int32_high))) << 32)
+
+// Return the low int32 value from an int64 value.
+#define CefInt64GetLow(int64_val) static_cast<int32>(int64_val)
+// Return the high int32 value from an int64 value.
+#define CefInt64GetHigh(int64_val) \
+    static_cast<int32>((static_cast<int64>(int64_val) >> 32) & 0xFFFFFFFFL)
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -91,7 +125,7 @@ extern "C" {
 ///
 // Log severity levels.
 ///
-enum cef_log_severity_t {
+typedef enum {
   ///
   // Default logging (currently INFO logging).
   ///
@@ -126,11 +160,32 @@ enum cef_log_severity_t {
   // Completely disable logging.
   ///
   LOGSEVERITY_DISABLE = 99
-};
+} cef_log_severity_t;
+
+///
+// Represents the state of a setting.
+///
+typedef enum {
+  ///
+  // Use the default state for the setting.
+  ///
+  STATE_DEFAULT = 0,
+
+  ///
+  // Enable or allow the setting.
+  ///
+  STATE_ENABLED,
+
+  ///
+  // Disable or disallow the setting.
+  ///
+  STATE_DISABLED,
+} cef_state_t;
 
 ///
 // Initialization settings. Specify NULL or 0 to get the recommended default
-// values.
+// values. Many of these and other settings can also configured using command-
+// line switches.
 ///
 typedef struct _cef_settings_t {
   ///
@@ -141,14 +196,23 @@ typedef struct _cef_settings_t {
   ///
   // Set to true (1) to use a single process for the browser and renderer. This
   // run mode is not officially supported by Chromium and is less stable than
-  // the multi-process default.
+  // the multi-process default. Also configurable using the "single-process"
+  // command-line switch.
   ///
-  bool single_process;
+  int single_process;
+
+  ///
+  // Set to true (1) to disable the sandbox for sub-processes. See
+  // cef_sandbox_win.h for requirements to enable the sandbox on Windows. Also
+  // configurable using the "no-sandbox" command-line switch.
+  ///
+  int no_sandbox;
 
   ///
   // The path to a separate executable that will be launched for sub-processes.
   // By default the browser process executable is used. See the comments on
-  // CefExecuteProcess() for details.
+  // CefExecuteProcess() for details. Also configurable using the
+  // "browser-subprocess-path" command-line switch.
   ///
   cef_string_t browser_subprocess_path;
 
@@ -157,7 +221,14 @@ typedef struct _cef_settings_t {
   // thread. If false (0) than the CefDoMessageLoopWork() function must be
   // called from your application message loop.
   ///
-  bool multi_threaded_message_loop;
+  int multi_threaded_message_loop;
+
+  ///
+  // Set to true (1) to enable windowless (off-screen) rendering support. Do not
+  // enable this value if the application does not use windowless rendering as
+  // it may reduce rendering performance on some systems.
+  ///
+  int windowless_rendering_enabled;
 
   ///
   // Set to true (1) to disable configuration of browser process features using
@@ -165,25 +236,38 @@ typedef struct _cef_settings_t {
   // be specified using CEF data structures or via the
   // CefApp::OnBeforeCommandLineProcessing() method.
   ///
-  bool command_line_args_disabled;
+  int command_line_args_disabled;
 
   ///
   // The location where cache data will be stored on disk. If empty an in-memory
-  // cache will be used. HTML5 databases such as localStorage will only persist
-  // across sessions if a cache path is specified.
+  // cache will be used for some features and a temporary disk cache for others.
+  // HTML5 databases such as localStorage will only persist across sessions if a
+  // cache path is specified.
   ///
   cef_string_t cache_path;
 
   ///
+  // To persist session cookies (cookies without an expiry date or validity
+  // interval) by default when using the global cookie manager set this value to
+  // true. Session cookies are generally intended to be transient and most Web
+  // browsers do not persist them. A |cache_path| value must also be specified to
+  // enable this feature. Also configurable using the "persist-session-cookies"
+  // command-line switch.
+  ///
+  int persist_session_cookies;
+
+  ///
   // Value that will be returned as the User-Agent HTTP header. If empty the
-  // default User-Agent string will be used.
+  // default User-Agent string will be used. Also configurable using the
+  // "user-agent" command-line switch.
   ///
   cef_string_t user_agent;
 
   ///
   // Value that will be inserted as the product portion of the default
   // User-Agent string. If empty the Chromium product version will be used. If
-  // |userAgent| is specified this value will be ignored.
+  // |userAgent| is specified this value will be ignored. Also configurable
+  // using the "product-version" command-line switch.
   ///
   cef_string_t product_version;
 
@@ -191,41 +275,46 @@ typedef struct _cef_settings_t {
   // The locale string that will be passed to WebKit. If empty the default
   // locale of "en-US" will be used. This value is ignored on Linux where locale
   // is determined using environment variable parsing with the precedence order:
-  // LANGUAGE, LC_ALL, LC_MESSAGES and LANG.
+  // LANGUAGE, LC_ALL, LC_MESSAGES and LANG. Also configurable using the "lang"
+  // command-line switch.
   ///
   cef_string_t locale;
 
   ///
   // The directory and file name to use for the debug log. If empty, the
   // default name of "debug.log" will be used and the file will be written
-  // to the application directory.
+  // to the application directory. Also configurable using the "log-file"
+  // command-line switch.
   ///
   cef_string_t log_file;
 
   ///
   // The log severity. Only messages of this severity level or higher will be
-  // logged.
+  // logged. Also configurable using the "log-severity" command-line switch with
+  // a value of "verbose", "info", "warning", "error", "error-report" or
+  // "disable".
   ///
   cef_log_severity_t log_severity;
 
   ///
-  // Custom flags that will be used when initializing the V8 JavaScript engine.
-  // The consequences of using custom flags may not be well tested.
+  // Enable DCHECK in release mode to ease debugging. Also configurable using the
+  // "enable-release-dcheck" command-line switch.
   ///
-  cef_string_t javascript_flags;
+  int release_dcheck_enabled;
 
   ///
-  // Set to true (1) to use the system proxy resolver on Windows when
-  // "Automatically detect settings" is checked. This setting is disabled
-  // by default for performance reasons.
+  // Custom flags that will be used when initializing the V8 JavaScript engine.
+  // The consequences of using custom flags may not be well tested. Also
+  // configurable using the "js-flags" command-line switch.
   ///
-  bool auto_detect_proxy_settings_enabled;
+  cef_string_t javascript_flags;
 
   ///
   // The fully qualified path for the resources directory. If this value is
   // empty the cef.pak and/or devtools_resources.pak files must be located in
   // the module directory on Windows/Linux or the app bundle Resources directory
-  // on Mac OS X.
+  // on Mac OS X. Also configurable using the "resources-dir-path" command-line
+  // switch.
   ///
   cef_string_t resources_dir_path;
 
@@ -233,7 +322,8 @@ typedef struct _cef_settings_t {
   // The fully qualified path for the locales directory. If this value is empty
   // the locales directory must be located in the module directory. This value
   // is ignored on Mac OS X where pack files are always loaded from the app
-  // bundle Resources directory.
+  // bundle Resources directory. Also configurable using the "locales-dir-path"
+  // command-line switch.
   ///
   cef_string_t locales_dir_path;
 
@@ -241,23 +331,74 @@ typedef struct _cef_settings_t {
   // Set to true (1) to disable loading of pack files for resources and locales.
   // A resource bundle handler must be provided for the browser and render
   // processes via CefApp::GetResourceBundleHandler() if loading of pack files
-  // is disabled.
+  // is disabled. Also configurable using the "disable-pack-loading" command-
+  // line switch.
   ///
-  bool pack_loading_disabled;
+  int pack_loading_disabled;
 
   ///
   // Set to a value between 1024 and 65535 to enable remote debugging on the
   // specified port. For example, if 8080 is specified the remote debugging URL
   // will be http://localhost:8080. CEF can be remotely debugged from any CEF or
-  // Chrome browser window.
+  // Chrome browser window. Also configurable using the "remote-debugging-port"
+  // command-line switch.
   ///
   int remote_debugging_port;
+
+  ///
+  // The number of stack trace frames to capture for uncaught exceptions.
+  // Specify a positive value to enable the CefV8ContextHandler::
+  // OnUncaughtException() callback. Specify 0 (default value) and
+  // OnUncaughtException() will not be called. Also configurable using the
+  // "uncaught-exception-stack-size" command-line switch.
+  ///
+  int uncaught_exception_stack_size;
+
+  ///
+  // By default CEF V8 references will be invalidated (the IsValid() method will
+  // return false) after the owning context has been released. This reduces the
+  // need for external record keeping and avoids crashes due to the use of V8
+  // references after the associated context has been released.
+  //
+  // CEF currently offers two context safety implementations with different
+  // performance characteristics. The default implementation (value of 0) uses a
+  // map of hash values and should provide better performance in situations with
+  // a small number contexts. The alternate implementation (value of 1) uses a
+  // hidden value attached to each context and should provide better performance
+  // in situations with a large number of contexts.
+  //
+  // If you need better performance in the creation of V8 references and you
+  // plan to manually track context lifespan you can disable context safety by
+  // specifying a value of -1.
+  //
+  // Also configurable using the "context-safety-implementation" command-line
+  // switch.
+  ///
+  int context_safety_implementation;
+
+  ///
+  // Set to true (1) to ignore errors related to invalid SSL certificates.
+  // Enabling this setting can lead to potential security vulnerabilities like
+  // "man in the middle" attacks. Applications that load content from the
+  // internet should not enable this setting. Also configurable using the
+  // "ignore-certificate-errors" command-line switch.
+  ///
+  int ignore_certificate_errors;
+
+  ///
+  // Opaque background color used for accelerated content. By default the
+  // background color will be white. Only the RGB compontents of the specified
+  // value will be used. The alpha component must greater than 0 to enable use
+  // of the background color but will be otherwise ignored.
+  ///
+  cef_color_t background_color;
 } cef_settings_t;
 
 ///
 // Browser initialization settings. Specify NULL or 0 to get the recommended
 // default values. The consequences of using custom values may not be well
-// tested.
+// tested. Many of these and other settings can also configured using command-
+// line switches.
 ///
 typedef struct _cef_browser_settings_t {
   ///
@@ -282,200 +423,148 @@ typedef struct _cef_browser_settings_t {
   int minimum_logical_font_size;
 
   ///
-  // Set to true (1) to disable loading of fonts from remote sources.
-  ///
-  bool remote_fonts_disabled;
-
-  ///
-  // Default encoding for Web content. If empty "ISO-8859-1" will be used.
+  // Default encoding for Web content. If empty "ISO-8859-1" will be used. Also
+  // configurable using the "default-encoding" command-line switch.
   ///
   cef_string_t default_encoding;
 
   ///
-  // Set to true (1) to attempt automatic detection of content encoding.
+  // Controls the loading of fonts from remote sources. Also configurable using
+  // the "disable-remote-fonts" command-line switch.
   ///
-  bool encoding_detector_enabled;
+  cef_state_t remote_fonts;
 
   ///
-  // Set to true (1) to disable JavaScript.
+  // Controls whether JavaScript can be executed. Also configurable using the
+  // "disable-javascript" command-line switch.
   ///
-  bool javascript_disabled;
+  cef_state_t javascript;
 
   ///
-  // Set to true (1) to disallow JavaScript from opening windows.
+  // Controls whether JavaScript can be used for opening windows. Also
+  // configurable using the "disable-javascript-open-windows" command-line
+  // switch.
   ///
-  bool javascript_open_windows_disallowed;
+  cef_state_t javascript_open_windows;
 
   ///
-  // Set to true (1) to disallow JavaScript from closing windows.
+  // Controls whether JavaScript can be used to close windows that were not
+  // opened via JavaScript. JavaScript can still be used to close windows that
+  // were opened via JavaScript. Also configurable using the
+  // "disable-javascript-close-windows" command-line switch.
   ///
-  bool javascript_close_windows_disallowed;
+  cef_state_t javascript_close_windows;
 
   ///
-  // Set to true (1) to disallow JavaScript from accessing the clipboard.
+  // Controls whether JavaScript can access the clipboard. Also configurable
+  // using the "disable-javascript-access-clipboard" command-line switch.
   ///
-  bool javascript_access_clipboard_disallowed;
+  cef_state_t javascript_access_clipboard;
 
   ///
-  // Set to true (1) to disable DOM pasting in the editor. DOM pasting also
-  // depends on |javascript_cannot_access_clipboard| being false (0).
+  // Controls whether DOM pasting is supported in the editor via
+  // execCommand("paste"). The |javascript_access_clipboard| setting must also
+  // be enabled. Also configurable using the "disable-javascript-dom-paste"
+  // command-line switch.
   ///
-  bool dom_paste_disabled;
+  cef_state_t javascript_dom_paste;
 
   ///
-  // Set to true (1) to enable drawing of the caret position.
+  // Controls whether the caret position will be drawn. Also configurable using
+  // the "enable-caret-browsing" command-line switch.
   ///
-  bool caret_browsing_enabled;
+  cef_state_t caret_browsing;
 
   ///
-  // Set to true (1) to disable Java.
+  // Controls whether the Java plugin will be loaded. Also configurable using
+  // the "disable-java" command-line switch.
   ///
-  bool java_disabled;
+  cef_state_t java;
 
   ///
-  // Set to true (1) to disable plugins.
+  // Controls whether any plugins will be loaded. Also configurable using the
+  // "disable-plugins" command-line switch.
   ///
-  bool plugins_disabled;
+  cef_state_t plugins;
 
   ///
-  // Set to true (1) to allow access to all URLs from file URLs.
+  // Controls whether file URLs will have access to all URLs. Also configurable
+  // using the "allow-universal-access-from-files" command-line switch.
   ///
-  bool universal_access_from_file_urls_allowed;
+  cef_state_t universal_access_from_file_urls;
 
   ///
-  // Set to true (1) to allow access to file URLs from other file URLs.
+  // Controls whether file URLs will have access to other file URLs. Also
+  // configurable using the "allow-access-from-files" command-line switch.
   ///
-  bool file_access_from_file_urls_allowed;
+  cef_state_t file_access_from_file_urls;
 
   ///
-  // Set to true (1) to allow risky security behavior such as cross-site
-  // scripting (XSS). Use with extreme care.
+  // Controls whether web security restrictions (same-origin policy) will be
+  // enforced. Disabling this setting is not recommend as it will allow risky
+  // security behavior such as cross-site scripting (XSS). Also configurable
+  // using the "disable-web-security" command-line switch.
   ///
-  bool web_security_disabled;
+  cef_state_t web_security;
 
   ///
-  // Set to true (1) to enable console warnings about XSS attempts.
+  // Controls whether image URLs will be loaded from the network. A cached image
+  // will still be rendered if requested. Also configurable using the
+  // "disable-image-loading" command-line switch.
   ///
-  bool xss_auditor_enabled;
+  cef_state_t image_loading;
 
   ///
-  // Set to true (1) to suppress the network load of image URLs.  A cached
-  // image will still be rendered if requested.
+  // Controls whether standalone images will be shrunk to fit the page. Also
+  // configurable using the "image-shrink-standalone-to-fit" command-line
+  // switch.
   ///
-  bool image_load_disabled;
+  cef_state_t image_shrink_standalone_to_fit;
 
   ///
-  // Set to true (1) to shrink standalone images to fit the page.
+  // Controls whether text areas can be resized. Also configurable using the
+  // "disable-text-area-resize" command-line switch.
   ///
-  bool shrink_standalone_images_to_fit;
+  cef_state_t text_area_resize;
 
   ///
-  // Set to true (1) to disable browser backwards compatibility features.
+  // Controls whether the tab key can advance focus to links. Also configurable
+  // using the "disable-tab-to-links" command-line switch.
   ///
-  bool site_specific_quirks_disabled;
+  cef_state_t tab_to_links;
 
   ///
-  // Set to true (1) to disable resize of text areas.
+  // Controls whether local storage can be used. Also configurable using the
+  // "disable-local-storage" command-line switch.
   ///
-  bool text_area_resize_disabled;
+  cef_state_t local_storage;
 
   ///
-  // Set to true (1) to disable use of the page cache.
+  // Controls whether databases can be used. Also configurable using the
+  // "disable-databases" command-line switch.
   ///
-  bool page_cache_disabled;
+  cef_state_t databases;
 
   ///
-  // Set to true (1) to not have the tab key advance focus to links.
+  // Controls whether the application cache can be used. Also configurable using
+  // the "disable-application-cache" command-line switch.
   ///
-  bool tab_to_links_disabled;
+  cef_state_t application_cache;
 
   ///
-  // Set to true (1) to disable hyperlink pings (<a ping> and window.sendPing).
+  // Controls whether WebGL can be used. Note that WebGL requires hardware
+  // support and may not work on all systems even when enabled. Also
+  // configurable using the "disable-webgl" command-line switch.
   ///
-  bool hyperlink_auditing_disabled;
+  cef_state_t webgl;
 
   ///
-  // Set to true (1) to enable the user style sheet for all pages.
+  // Controls whether content that depends on accelerated compositing can be
+  // used. Note that accelerated compositing requires hardware support and may
+  // not work on all systems even when enabled. Also configurable using the
+  // "disable-accelerated-compositing" command-line switch.
   ///
-  bool user_style_sheet_enabled;
-
-  ///
-  // Location of the user style sheet. This must be a data URL of the form
-  // "data:text/css;charset=utf-8;base64,csscontent" where "csscontent" is the
-  // base64 encoded contents of the CSS file.
-  ///
-  cef_string_t user_style_sheet_location;
-
-  ///
-  // Set to true (1) to disable style sheets.
-  ///
-  bool author_and_user_styles_disabled;
-
-  ///
-  // Set to true (1) to disable local storage.
-  ///
-  bool local_storage_disabled;
-
-  ///
-  // Set to true (1) to disable databases.
-  ///
-  bool databases_disabled;
-
-  ///
-  // Set to true (1) to disable application cache.
-  ///
-  bool application_cache_disabled;
-
-  ///
-  // Set to true (1) to disable WebGL.
-  ///
-  bool webgl_disabled;
-
-  ///
-  // Set to true (1) to disable accelerated compositing.
-  ///
-  bool accelerated_compositing_disabled;
-
-  ///
-  // Set to true (1) to disable accelerated layers. This affects features like
-  // 3D CSS transforms.
-  ///
-  bool accelerated_layers_disabled;
-
-  ///
-  // Set to true (1) to disable accelerated video.
-  ///
-  bool accelerated_video_disabled;
-
-  ///
-  // Set to true (1) to disable accelerated 2d canvas.
-  ///
-  bool accelerated_2d_canvas_disabled;
-
-  ///
-  // Set to true (1) to enable accelerated painting.
-  ///
-  bool accelerated_painting_enabled;
-
-  ///
-  // Set to true (1) to enable accelerated filters.
-  ///
-  bool accelerated_filters_enabled;
-
-  ///
-  // Set to true (1) to disable accelerated plugins.
-  ///
-  bool accelerated_plugins_disabled;
-
-  ///
-  // Set to true (1) to disable developer tools (WebKit inspector).
-  ///
-  bool developer_tools_disabled;
-
-  ///
-  // Set to true (1) to enable fullscreen mode.
-  ///
-  bool fullscreen_enabled;
+  cef_state_t accelerated_compositing;
 } cef_browser_settings_t;
 
 ///
@@ -512,6 +601,14 @@ typedef struct _cef_urlparts_t {
   // Port number component.
   ///
   cef_string_t port;
+
+  ///
+  // Origin contains just the scheme, host, and port from a URL. Equivalent to
+  // clearing any username and password, replacing the path with a slash, and
+  // clearing everything after that. This value will be empty for non-standard
+  // URLs.
+  ///
+  cef_string_t origin;
 
   ///
   // Path component including the first slash following the host.
@@ -554,12 +651,12 @@ typedef struct _cef_cookie_t {
   ///
   // If |secure| is true the cookie will only be sent for HTTPS requests.
   ///
-  bool secure;
+  int secure;
 
   ///
   // If |httponly| is true the cookie will only be sent for HTTP requests.
   ///
-  bool httponly;
+  int httponly;
 
   ///
   // The cookie creation date. This is automatically populated by the system on
@@ -576,14 +673,14 @@ typedef struct _cef_cookie_t {
   ///
   // The cookie expiration date is only valid if |has_expires| is true.
   ///
-  bool has_expires;
+  int has_expires;
   cef_time_t expires;
 } cef_cookie_t;
 
 ///
 // Process termination status values.
 ///
-enum cef_termination_status_t {
+typedef enum {
   ///
   // Non-zero exit status.
   ///
@@ -598,12 +695,12 @@ enum cef_termination_status_t {
   // Segmentation fault.
   ///
   TS_PROCESS_CRASHED,
-};
+} cef_termination_status_t;
 
 ///
 // Path key values.
 ///
-enum cef_path_key_t {
+typedef enum {
   ///
   // Current directory.
   ///
@@ -634,21 +731,21 @@ enum cef_path_key_t {
   // module).
   ///
   PK_FILE_MODULE,
-};
+} cef_path_key_t;
 
 ///
 // Storage types.
 ///
-enum cef_storage_type_t {
+typedef enum {
   ST_LOCALSTORAGE = 0,
   ST_SESSIONSTORAGE,
-};
+} cef_storage_type_t;
 
 ///
 // Supported error code values. See net\base\net_error_list.h for complete
 // descriptions of the error codes.
 ///
-enum cef_errorcode_t {
+typedef enum {
   ERR_NONE = 0,
   ERR_FAILED = -2,
   ERR_ABORTED = -3,
@@ -698,68 +795,261 @@ enum cef_errorcode_t {
   ERR_RESPONSE_HEADERS_TOO_BIG = -325,
   ERR_CACHE_MISS = -400,
   ERR_INSECURE_RESPONSE = -501,
-};
+} cef_errorcode_t;
+
+///
+// "Verb" of a drag-and-drop operation as negotiated between the source and
+// destination. These constants match their equivalents in WebCore's
+// DragActions.h and should not be renumbered.
+///
+typedef enum {
+    DRAG_OPERATION_NONE    = 0,
+    DRAG_OPERATION_COPY    = 1,
+    DRAG_OPERATION_LINK    = 2,
+    DRAG_OPERATION_GENERIC = 4,
+    DRAG_OPERATION_PRIVATE = 8,
+    DRAG_OPERATION_MOVE    = 16,
+    DRAG_OPERATION_DELETE  = 32,
+    DRAG_OPERATION_EVERY   = UINT_MAX
+} cef_drag_operations_mask_t;
 
 ///
 // V8 access control values.
 ///
-enum cef_v8_accesscontrol_t {
+typedef enum {
   V8_ACCESS_CONTROL_DEFAULT               = 0,
   V8_ACCESS_CONTROL_ALL_CAN_READ          = 1,
   V8_ACCESS_CONTROL_ALL_CAN_WRITE         = 1 << 1,
   V8_ACCESS_CONTROL_PROHIBITS_OVERWRITING = 1 << 2
-};
+} cef_v8_accesscontrol_t;
 
 ///
 // V8 property attribute values.
 ///
-enum cef_v8_propertyattribute_t {
+typedef enum {
   V8_PROPERTY_ATTRIBUTE_NONE       = 0,       // Writeable, Enumerable,
                                               //   Configurable
   V8_PROPERTY_ATTRIBUTE_READONLY   = 1 << 0,  // Not writeable
   V8_PROPERTY_ATTRIBUTE_DONTENUM   = 1 << 1,  // Not enumerable
   V8_PROPERTY_ATTRIBUTE_DONTDELETE = 1 << 2   // Not configurable
-};
+} cef_v8_propertyattribute_t;
 
 ///
 // Post data elements may represent either bytes or files.
 ///
-enum cef_postdataelement_type_t {
+typedef enum {
   PDE_TYPE_EMPTY  = 0,
   PDE_TYPE_BYTES,
   PDE_TYPE_FILE,
-};
+} cef_postdataelement_type_t;
+
+///
+// Resource type for a request.
+///
+typedef enum {
+  ///
+  // Top level page.
+  ///
+  RT_MAIN_FRAME = 0,
+
+  ///
+  // Frame or iframe.
+  ///
+  RT_SUB_FRAME,
+
+  ///
+  // CSS stylesheet.
+  ///
+  RT_STYLESHEET,
+
+  ///
+  // External script.
+  ///
+  RT_SCRIPT,
+
+  ///
+  // Image (jpg/gif/png/etc).
+  ///
+  RT_IMAGE,
+
+  ///
+  // Font.
+  ///
+  RT_FONT_RESOURCE,
+
+  ///
+  // Some other subresource. This is the default type if the actual type is
+  // unknown.
+  ///
+  RT_SUB_RESOURCE,
+
+  ///
+  // Object (or embed) tag for a plugin, or a resource that a plugin requested.
+  ///
+  RT_OBJECT,
+
+  ///
+  // Media resource.
+  ///
+  RT_MEDIA,
+
+  ///
+  // Main resource of a dedicated worker.
+  ///
+  RT_WORKER,
+
+  ///
+  // Main resource of a shared worker.
+  ///
+  RT_SHARED_WORKER,
+
+  ///
+  // Explicitly requested prefetch.
+  ///
+  RT_PREFETCH,
+
+  ///
+  // Favicon.
+  ///
+  RT_FAVICON,
+
+  ///
+  // XMLHttpRequest.
+  ///
+  RT_XHR,
+} cef_resource_type_t;
+
+///
+// Transition type for a request. Made up of one source value and 0 or more
+// qualifiers.
+///
+typedef enum {
+  ///
+  // Source is a link click or the JavaScript window.open function. This is
+  // also the default value for requests like sub-resource loads that are not
+  // navigations.
+  ///
+  TT_LINK = 0,
+
+  ///
+  // Source is some other "explicit" navigation action such as creating a new
+  // browser or using the LoadURL function. This is also the default value
+  // for navigations where the actual type is unknown.
+  ///
+  TT_EXPLICIT = 1,
+
+  ///
+  // Source is a subframe navigation. This is any content that is automatically
+  // loaded in a non-toplevel frame. For example, if a page consists of several
+  // frames containing ads, those ad URLs will have this transition type.
+  // The user may not even realize the content in these pages is a separate
+  // frame, so may not care about the URL.
+  ///
+  TT_AUTO_SUBFRAME = 3,
+
+  ///
+  // Source is a subframe navigation explicitly requested by the user that will
+  // generate new navigation entries in the back/forward list. These are
+  // probably more important than frames that were automatically loaded in
+  // the background because the user probably cares about the fact that this
+  // link was loaded.
+  ///
+  TT_MANUAL_SUBFRAME = 4,
+
+  ///
+  // Source is a form submission by the user. NOTE: In some situations
+  // submitting a form does not result in this transition type. This can happen
+  // if the form uses a script to submit the contents.
+  ///
+  TT_FORM_SUBMIT = 7,
+
+  ///
+  // Source is a "reload" of the page via the Reload function or by re-visiting
+  // the same URL. NOTE: This is distinct from the concept of whether a
+  // particular load uses "reload semantics" (i.e. bypasses cached data).
+  ///
+  TT_RELOAD = 8,
+
+  ///
+  // General mask defining the bits used for the source values.
+  ///
+  TT_SOURCE_MASK = 0xFF,
+
+  // Qualifiers.
+  // Any of the core values above can be augmented by one or more qualifiers.
+  // These qualifiers further define the transition.
+
+  ///
+  // Attempted to visit a URL but was blocked.
+  ///
+  TT_BLOCKED_FLAG = 0x00800000,
+
+  ///
+  // Used the Forward or Back function to navigate among browsing history.
+  ///
+  TT_FORWARD_BACK_FLAG = 0x01000000,
+
+  ///
+  // The beginning of a navigation chain.
+  ///
+  TT_CHAIN_START_FLAG = 0x10000000,
+
+  ///
+  // The last transition in a redirect chain.
+  ///
+  TT_CHAIN_END_FLAG = 0x20000000,
+
+  ///
+  // Redirects caused by JavaScript or a meta refresh tag on the page.
+  ///
+  TT_CLIENT_REDIRECT_FLAG = 0x40000000,
+
+  ///
+  // Redirects sent from the server by HTTP headers.
+  ///
+  TT_SERVER_REDIRECT_FLAG = 0x80000000,
+
+  ///
+  // Used to test whether a transition involves a redirect.
+  ///
+  TT_IS_REDIRECT_MASK = 0xC0000000,
+
+  ///
+  // General mask defining the bits used for the qualifiers.
+  ///
+  TT_QUALIFIER_MASK = 0xFFFFFF00,
+} cef_transition_type_t;
 
 ///
 // Flags used to customize the behavior of CefURLRequest.
 ///
-enum cef_urlrequest_flags_t {
+typedef enum {
   ///
   // Default behavior.
   ///
   UR_FLAG_NONE                      = 0,
-  
+
   ///
   // If set the cache will be skipped when handling the request.
   ///
   UR_FLAG_SKIP_CACHE                = 1 << 0,
-  
+
   ///
   // If set user name, password, and cookies may be sent with the request.
   ///
   UR_FLAG_ALLOW_CACHED_CREDENTIALS  = 1 << 1,
-  
+
   ///
   // If set cookies may be sent with the request and saved from the response.
   // UR_FLAG_ALLOW_CACHED_CREDENTIALS must also be set.
   ///
   UR_FLAG_ALLOW_COOKIES             = 1 << 2,
-  
+
   ///
   // If set upload progress events will be generated when a request has a body.
   ///
   UR_FLAG_REPORT_UPLOAD_PROGRESS    = 1 << 3,
-  
+
   ///
   // If set load timing info will be collected for the request.
   ///
@@ -781,38 +1071,38 @@ enum cef_urlrequest_flags_t {
   // originated in the browser process.
   ///
   UR_FLAG_NO_RETRY_ON_5XX           = 1 << 7,
-};
+} cef_urlrequest_flags_t;
 
 ///
 // Flags that represent CefURLRequest status.
 ///
-enum cef_urlrequest_status_t {
+typedef enum {
   ///
   // Unknown status.
   ///
   UR_UNKNOWN = 0,
-  
+
   ///
   // Request succeeded.
   ///
   UR_SUCCESS,
-  
+
   ///
   // An IO request is pending, and the caller will be informed when it is
   // completed.
   ///
   UR_IO_PENDING,
-  
+
   ///
   // Request was canceled programatically.
   ///
   UR_CANCELED,
-  
+
   ///
   // Request failed for some reason.
   ///
   UR_FAILED,
-};
+} cef_urlrequest_status_t;
 
 ///
 // Structure representing a rectangle.
@@ -827,7 +1117,7 @@ typedef struct _cef_rect_t {
 ///
 // Existing process IDs.
 ///
-enum cef_process_id_t {
+typedef enum {
   ///
   // Browser process.
   ///
@@ -836,12 +1126,12 @@ enum cef_process_id_t {
   // Renderer process.
   ///
   PID_RENDERER,
-};
+} cef_process_id_t;
 
 ///
 // Existing thread IDs.
 ///
-enum cef_thread_id_t {
+typedef enum {
 // BROWSER PROCESS THREADS -- Only available in the browser process.
 
   ///
@@ -888,12 +1178,12 @@ enum cef_thread_id_t {
   // The main thread in the renderer. Used for all WebKit and V8 interaction.
   ///
   TID_RENDERER,
-};
+} cef_thread_id_t;
 
 ///
 // Supported value types.
 ///
-enum cef_value_type_t {
+typedef enum {
   VTYPE_INVALID = 0,
   VTYPE_NULL,
   VTYPE_BOOL,
@@ -903,22 +1193,78 @@ enum cef_value_type_t {
   VTYPE_BINARY,
   VTYPE_DICTIONARY,
   VTYPE_LIST,
-};
+} cef_value_type_t;
 
 ///
 // Supported JavaScript dialog types.
 ///
-enum cef_jsdialog_type_t {
+typedef enum {
   JSDIALOGTYPE_ALERT = 0,
   JSDIALOGTYPE_CONFIRM,
   JSDIALOGTYPE_PROMPT,
-};
+} cef_jsdialog_type_t;
+
+///
+// Screen information used when window rendering is disabled. This structure is
+// passed as a parameter to CefRenderHandler::GetScreenInfo and should be filled
+// in by the client.
+///
+typedef struct _cef_screen_info_t {
+  ///
+  // Device scale factor. Specifies the ratio between physical and logical
+  // pixels.
+  ///
+  float device_scale_factor;
+
+  ///
+  // The screen depth in bits per pixel.
+  ///
+  int depth;
+
+  ///
+  // The bits per color component. This assumes that the colors are balanced
+  // equally.
+  ///
+  int depth_per_component;
+
+  ///
+  // This can be true for black and white printers.
+  ///
+  int is_monochrome;
+
+  ///
+  // This is set from the rcMonitor member of MONITORINFOEX, to whit:
+  //   "A RECT structure that specifies the display monitor rectangle,
+  //   expressed in virtual-screen coordinates. Note that if the monitor
+  //   is not the primary display monitor, some of the rectangle's
+  //   coordinates may be negative values."
+  //
+  // The |rect| and |available_rect| properties are used to determine the
+  // available surface for rendering popup views.
+  ///
+  cef_rect_t rect;
+
+  ///
+  // This is set from the rcWork member of MONITORINFOEX, to whit:
+  //   "A RECT structure that specifies the work area rectangle of the
+  //   display monitor that can be used by applications, expressed in
+  //   virtual-screen coordinates. Windows uses this rectangle to
+  //   maximize an application on the monitor. The rest of the area in
+  //   rcMonitor contains system windows such as the task bar and side
+  //   bars. Note that if the monitor is not the primary display monitor,
+  //   some of the rectangle's coordinates may be negative values".
+  //
+  // The |rect| and |available_rect| properties are used to determine the
+  // available surface for rendering popup views.
+  ///
+  cef_rect_t available_rect;
+} cef_screen_info_t;
 
 ///
 // Supported menu IDs. Non-English translations can be provided for the
 // IDS_MENU_* strings in CefResourceBundleHandler::GetLocalizedString().
 ///
-enum cef_menu_id_t {
+typedef enum {
   // Navigation.
   MENU_ID_BACK                = 100,
   MENU_ID_FORWARD             = 101,
@@ -945,14 +1291,52 @@ enum cef_menu_id_t {
   // defined in the tools/gritsettings/resource_ids file.
   MENU_ID_USER_FIRST          = 26500,
   MENU_ID_USER_LAST           = 28500,
-};
+} cef_menu_id_t;
+
+///
+// Mouse button types.
+///
+typedef enum {
+  MBT_LEFT   = 0,
+  MBT_MIDDLE,
+  MBT_RIGHT,
+} cef_mouse_button_type_t;
+
+///
+// Structure representing mouse event information.
+///
+typedef struct _cef_mouse_event_t {
+  ///
+  // X coordinate relative to the left side of the view.
+  ///
+  int x;
+
+  ///
+  // Y coordinate relative to the top side of the view.
+  ///
+  int y;
+
+  ///
+  // Bit flags describing any pressed modifier keys. See
+  // cef_event_flags_t for values.
+  ///
+  uint32 modifiers;
+} cef_mouse_event_t;
+
+///
+// Paint element types.
+///
+typedef enum {
+  PET_VIEW  = 0,
+  PET_POPUP,
+} cef_paint_element_type_t;
 
 ///
 // Supported event bit flags.
 ///
-enum cef_event_flags_t {
+typedef enum {
   EVENTFLAG_NONE                = 0,
-  EVENTFLAG_CAPS_LOCK_DOWN      = 1 << 0,
+  EVENTFLAG_CAPS_LOCK_ON        = 1 << 0,
   EVENTFLAG_SHIFT_DOWN          = 1 << 1,
   EVENTFLAG_CONTROL_DOWN        = 1 << 2,
   EVENTFLAG_ALT_DOWN            = 1 << 3,
@@ -961,26 +1345,28 @@ enum cef_event_flags_t {
   EVENTFLAG_RIGHT_MOUSE_BUTTON  = 1 << 6,
   // Mac OS-X command key.
   EVENTFLAG_COMMAND_DOWN        = 1 << 7,
-  // Windows extended key (see WM_KEYDOWN doc).
-  EVENTFLAG_EXTENDED            = 1 << 8,
-};
+  EVENTFLAG_NUM_LOCK_ON         = 1 << 8,
+  EVENTFLAG_IS_KEY_PAD          = 1 << 9,
+  EVENTFLAG_IS_LEFT             = 1 << 10,
+  EVENTFLAG_IS_RIGHT            = 1 << 11,
+} cef_event_flags_t;
 
 ///
 // Supported menu item types.
 ///
-enum cef_menu_item_type_t {
+typedef enum {
   MENUITEMTYPE_NONE,
   MENUITEMTYPE_COMMAND,
   MENUITEMTYPE_CHECK,
   MENUITEMTYPE_RADIO,
   MENUITEMTYPE_SEPARATOR,
   MENUITEMTYPE_SUBMENU,
-};
+} cef_menu_item_type_t;
 
 ///
 // Supported context menu type flags.
 ///
-enum cef_context_menu_type_flags_t {
+typedef enum {
   ///
   // No node is selected.
   ///
@@ -1009,12 +1395,12 @@ enum cef_context_menu_type_flags_t {
   // An editable element is selected.
   ///
   CM_TYPEFLAG_EDITABLE    = 1 << 5,
-};
+} cef_context_menu_type_flags_t;
 
 ///
 // Supported context menu media types.
 ///
-enum cef_context_menu_media_type_t {
+typedef enum {
   ///
   // No special node is in context.
   ///
@@ -1039,12 +1425,12 @@ enum cef_context_menu_media_type_t {
   // A plugin node is selected.
   ///
   CM_MEDIATYPE_PLUGIN,
-};
+} cef_context_menu_media_type_t;
 
 ///
 // Supported context menu media state bit flags.
 ///
-enum cef_context_menu_media_state_flags_t {
+typedef enum {
   CM_MEDIAFLAG_NONE                  = 0,
   CM_MEDIAFLAG_ERROR                 = 1 << 0,
   CM_MEDIAFLAG_PAUSED                = 1 << 1,
@@ -1056,12 +1442,12 @@ enum cef_context_menu_media_state_flags_t {
   CM_MEDIAFLAG_CONTROL_ROOT_ELEMENT  = 1 << 7,
   CM_MEDIAFLAG_CAN_PRINT             = 1 << 8,
   CM_MEDIAFLAG_CAN_ROTATE            = 1 << 9,
-};
+} cef_context_menu_media_state_flags_t;
 
 ///
 // Supported context menu edit state bit flags.
 ///
-enum cef_context_menu_edit_state_flags_t {
+typedef enum {
   CM_EDITFLAG_NONE            = 0,
   CM_EDITFLAG_CAN_UNDO        = 1 << 0,
   CM_EDITFLAG_CAN_REDO        = 1 << 1,
@@ -1071,28 +1457,17 @@ enum cef_context_menu_edit_state_flags_t {
   CM_EDITFLAG_CAN_DELETE      = 1 << 5,
   CM_EDITFLAG_CAN_SELECT_ALL  = 1 << 6,
   CM_EDITFLAG_CAN_TRANSLATE   = 1 << 7,
-};
+} cef_context_menu_edit_state_flags_t;
 
 ///
 // Key event types.
 ///
-enum cef_key_event_type_t {
+typedef enum {
   KEYEVENT_RAWKEYDOWN = 0,
   KEYEVENT_KEYDOWN,
   KEYEVENT_KEYUP,
   KEYEVENT_CHAR
-};
-
-///
-// Key event modifiers.
-///
-enum cef_key_event_modifiers_t {
-  KEY_SHIFT  = 1 << 0,
-  KEY_CTRL   = 1 << 1,
-  KEY_ALT    = 1 << 2,
-  KEY_META   = 1 << 3,
-  KEY_KEYPAD = 1 << 4,  // Only used on Mac OS-X
-};
+} cef_key_event_type_t;
 
 ///
 // Structure representing keyboard event information.
@@ -1102,12 +1477,12 @@ typedef struct _cef_key_event_t {
   // The type of keyboard event.
   ///
   cef_key_event_type_t type;
-  
+
   ///
   // Bit flags describing any pressed modifier keys. See
-  // cef_key_event_modifiers_t for values.
+  // cef_event_flags_t for values.
   ///
-  int modifiers;
+  uint32 modifiers;
 
   ///
   // The Windows key code for the key event. This value is used by the DOM
@@ -1127,7 +1502,7 @@ typedef struct _cef_key_event_t {
   // http://msdn.microsoft.com/en-us/library/ms646286(VS.85).aspx for details).
   // This value will always be false on non-Windows platforms.
   ///
-  bool is_system_key;
+  int is_system_key;
 
   ///
   // The character generated by the keystroke.
@@ -1144,13 +1519,13 @@ typedef struct _cef_key_event_t {
   // True if the focus is currently on an editable field on the page. This is
   // useful for determining if standard key events should be intercepted.
   ///
-  bool focus_on_editable_field;
+  int focus_on_editable_field;
 } cef_key_event_t;
 
 ///
 // Focus sources.
 ///
-enum cef_focus_source_t {
+typedef enum {
   ///
   // The source is explicit navigation via the API (LoadURL(), etc).
   ///
@@ -1159,7 +1534,19 @@ enum cef_focus_source_t {
   // The source is a system-generated focus event.
   ///
   FOCUS_SOURCE_SYSTEM,
-};
+} cef_focus_source_t;
+
+///
+// Navigation types.
+///
+typedef enum {
+  NAVIGATION_LINK_CLICKED = 0,
+  NAVIGATION_FORM_SUBMITTED,
+  NAVIGATION_BACK_FORWARD,
+  NAVIGATION_RELOAD,
+  NAVIGATION_FORM_RESUBMITTED,
+  NAVIGATION_OTHER,
+} cef_navigation_type_t;
 
 ///
 // Supported XML encoding types. The parser supports ASCII, ISO-8859-1, and
@@ -1167,18 +1554,18 @@ enum cef_focus_source_t {
 // before being passed to the parser. If a BOM is detected and the correct
 // decoder is available then that decoder will be used automatically.
 ///
-enum cef_xml_encoding_type_t {
+typedef enum {
   XML_ENCODING_NONE = 0,
   XML_ENCODING_UTF8,
   XML_ENCODING_UTF16LE,
   XML_ENCODING_UTF16BE,
   XML_ENCODING_ASCII,
-};
+} cef_xml_encoding_type_t;
 
 ///
 // XML node types.
 ///
-enum cef_xml_node_type_t {
+typedef enum {
   XML_NODE_UNSUPPORTED = 0,
   XML_NODE_PROCESSING_INSTRUCTION,
   XML_NODE_DOCUMENT_TYPE,
@@ -1190,64 +1577,47 @@ enum cef_xml_node_type_t {
   XML_NODE_ENTITY_REFERENCE,
   XML_NODE_WHITESPACE,
   XML_NODE_COMMENT,
-};
+} cef_xml_node_type_t;
 
 ///
 // Popup window features.
 ///
 typedef struct _cef_popup_features_t {
   int x;
-  bool xSet;
+  int xSet;
   int y;
-  bool ySet;
+  int ySet;
   int width;
-  bool widthSet;
+  int widthSet;
   int height;
-  bool heightSet;
+  int heightSet;
 
-  bool menuBarVisible;
-  bool statusBarVisible;
-  bool toolBarVisible;
-  bool locationBarVisible;
-  bool scrollbarsVisible;
-  bool resizable;
+  int menuBarVisible;
+  int statusBarVisible;
+  int toolBarVisible;
+  int locationBarVisible;
+  int scrollbarsVisible;
+  int resizable;
 
-  bool fullscreen;
-  bool dialog;
+  int fullscreen;
+  int dialog;
   cef_string_list_t additionalFeatures;
 } cef_popup_features_t;
 
 ///
-// Proxy types.
-///
-enum cef_proxy_type_t {
-  CEF_PROXY_TYPE_DIRECT = 0,
-  CEF_PROXY_TYPE_NAMED,
-  CEF_PROXY_TYPE_PAC_STRING,
-};
-
-///
-// Proxy information.
-///
-typedef struct _cef_proxy_info_t {
-  enum cef_proxy_type_t proxyType;
-  cef_string_t proxyList;
-} cef_proxy_info_t;
-
-///
 // DOM document types.
 ///
-enum cef_dom_document_type_t {
+typedef enum {
   DOM_DOCUMENT_TYPE_UNKNOWN = 0,
   DOM_DOCUMENT_TYPE_HTML,
   DOM_DOCUMENT_TYPE_XHTML,
   DOM_DOCUMENT_TYPE_PLUGIN,
-};
+} cef_dom_document_type_t;
 
 ///
 // DOM event category flags.
 ///
-enum cef_dom_event_category_t {
+typedef enum {
   DOM_EVENT_CATEGORY_UNKNOWN = 0x0,
   DOM_EVENT_CATEGORY_UI = 0x1,
   DOM_EVENT_CATEGORY_MOUSE = 0x2,
@@ -1265,45 +1635,39 @@ enum cef_dom_event_category_t {
   DOM_EVENT_CATEGORY_POPSTATE = 0x2000,
   DOM_EVENT_CATEGORY_PROGRESS = 0x4000,
   DOM_EVENT_CATEGORY_XMLHTTPREQUEST_PROGRESS = 0x8000,
-  DOM_EVENT_CATEGORY_WEBKIT_ANIMATION = 0x10000,
-  DOM_EVENT_CATEGORY_WEBKIT_TRANSITION = 0x20000,
-  DOM_EVENT_CATEGORY_BEFORE_LOAD = 0x40000,
-};
+  DOM_EVENT_CATEGORY_BEFORE_LOAD = 0x10000,
+} cef_dom_event_category_t;
 
 ///
 // DOM event processing phases.
 ///
-enum cef_dom_event_phase_t {
+typedef enum {
   DOM_EVENT_PHASE_UNKNOWN = 0,
   DOM_EVENT_PHASE_CAPTURING,
   DOM_EVENT_PHASE_AT_TARGET,
   DOM_EVENT_PHASE_BUBBLING,
-};
+} cef_dom_event_phase_t;
 
 ///
 // DOM node types.
 ///
-enum cef_dom_node_type_t {
+typedef enum {
   DOM_NODE_TYPE_UNSUPPORTED = 0,
   DOM_NODE_TYPE_ELEMENT,
   DOM_NODE_TYPE_ATTRIBUTE,
   DOM_NODE_TYPE_TEXT,
   DOM_NODE_TYPE_CDATA_SECTION,
-  DOM_NODE_TYPE_ENTITY_REFERENCE,
-  DOM_NODE_TYPE_ENTITY,
   DOM_NODE_TYPE_PROCESSING_INSTRUCTIONS,
   DOM_NODE_TYPE_COMMENT,
   DOM_NODE_TYPE_DOCUMENT,
   DOM_NODE_TYPE_DOCUMENT_TYPE,
   DOM_NODE_TYPE_DOCUMENT_FRAGMENT,
-  DOM_NODE_TYPE_NOTATION,
-  DOM_NODE_TYPE_XPATH_NAMESPACE,
-};
+} cef_dom_node_type_t;
 
 ///
 // Supported file dialog modes.
 ///
-enum cef_file_dialog_mode_t {
+typedef enum {
   ///
   // Requires that the file exists before allowing the user to pick it.
   ///
@@ -1319,17 +1683,17 @@ enum cef_file_dialog_mode_t {
   // already exists.
   ///
   FILE_DIALOG_SAVE,
-};
+} cef_file_dialog_mode_t;
 
 ///
 // Geoposition error codes.
 ///
-enum cef_geoposition_error_code_t {
+typedef enum {
   GEOPOSITON_ERROR_NONE = 0,
   GEOPOSITON_ERROR_PERMISSION_DENIED,
   GEOPOSITON_ERROR_POSITION_UNAVAILABLE,
   GEOPOSITON_ERROR_TIMEOUT,
-};
+} cef_geoposition_error_code_t;
 
 ///
 // Structure representing geoposition information. The properties of this
